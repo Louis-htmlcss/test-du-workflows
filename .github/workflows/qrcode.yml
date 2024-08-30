@@ -1,4 +1,4 @@
-name: Fetch File from Another Branch
+name: Fetch File from Another Branch and Push Changes
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  fetch-file:
+  fetch-file-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -28,3 +28,10 @@ jobs:
         if: github.event_name == 'pull_request'
         run: cat "PR_${{ github.event.pull_request.number }}/qr-workflow-template.yml"
       
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Add qr-workflow-template.yml for PR ${{ github.event.pull_request.number }}"
+          git push
