@@ -3,6 +3,11 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+# Ajoutez ces permissions
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   setup-qr-workflow:
     runs-on: ubuntu-latest
@@ -11,6 +16,7 @@ jobs:
         with:
           ref: qr-code-workflows
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Generate unique PR identifier
         run: echo "PR_ID=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
@@ -22,8 +28,8 @@ jobs:
       
       - name: Commit and push new workflow
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
           git add .github/workflows/qr-code-${{ env.PR_ID }}.yml
           git commit -m "Add QR code workflow for ${{ env.PR_ID }}"
           git push origin qr-code-workflows
