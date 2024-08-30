@@ -1,0 +1,51 @@
+name: Fetch File from Another Branch and Push Changes
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  fetch-file-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      workflows: write  # Ajoutez cette ligne
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: qr-code-workflows
+      - name: Display file content
+        run: cat qr-workflow-template.txt
+      
+      - name: Copy and rename file to .github/workflows directory
+        run: |
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          mkdir -p ".github/workflows/pr-$PR_NUMBER"
+          cp qr-workflow-template.txt ".github/workflows/pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"
+      
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Add qr-workflow-${{ github.event.pull_request.number }}.yml for PR #${{ github.event.pull_request.number }}"
+          branch: qr-code-workflows
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Ajoutez cette ligne
+      
+      - name: Trigger QR Code Workflow
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          WORKFLOW_FILE=".github/workflows/pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"
+          
+          if [ -f "$WORKFLOW_FILE" ]; then
+            echo "Triggering workflow for PR #$PR_NUMBER"
+            gh workflow run "$WORKFLOW_FILE"
+          else
+            echo "Workflow file not found for PR #$PR_NUMBER"
+            exit 1
+          fi
+      
+      
