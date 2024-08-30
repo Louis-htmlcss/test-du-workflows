@@ -1,0 +1,103 @@
+name: QR Code Generator for PR-${PR_NUMBER}
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-qr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Checkout PR branch
+        run: |
+          git fetch origin pull/${PR_NUMBER}/head:pr-${PR_NUMBER}
+          git checkout pr-${PR_NUMBER}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start Expo and extract QR code
+        run: |
+          npx expo start --non-interactive > expo.log &
+          PID=$!
+          while ! grep -q "Metro waiting on" expo.log; do sleep 1; done
+          QR_CODE=$(sed -n '/Metro waiting on/,/To run in development/p' expo.log | grep -v "Metro waiting on" | grep -v "To run in development")
+          echo "QR_CODE<<EOF" >> $GITHUB_ENV
+          echo "$QR_CODE" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          echo $PID > expo_pid.txt
+
+      - name: Update PR comment
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const qrCode = process.env.QR_CODE;
+            const prNumber = ${PR_NUMBER};
+            const comment = `## QR Code for PR-${PR_NUMBER}\n\`\`\`\n${qrCode}\n\`\`\``;
+            
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+            
+            const qrComment = comments.data.find(c => c.body.includes('QR Code for PR-${PR_NUMBER}'));
+            
+            if (qrComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: qrComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: comment
+              });
+            }
+
+      - name: Schedule next run
+        run: |
+          gh workflow run qr-code-pr-${PR_NUMBER}.yml --ref qr-code-workflows
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait and stop Expo
+        run: |
+          sleep 21000  # Wait for ~5h45m
+          kill $(cat expo_pid.txt)
+
+      - name: Remove QR code from PR comment
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = ${PR_NUMBER};
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+            
+            const qrComment = comments.data.find(c => c.body.includes('QR Code for PR-${PR_NUMBER}'));
+            
+            if (qrComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: qrComment.id,
+                body: "QR Code removed. A new one will be generated shortly."
+              });
+            }
