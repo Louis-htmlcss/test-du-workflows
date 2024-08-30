@@ -11,38 +11,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Display current branch and all branches
-        run: |
-          echo "Current branch:"
-          git branch --show-current
-          echo "All branches:"
-          git branch -a
-      - name: Fetch file from another branch
-        run: |
-          git checkout qr-code-workflows
-        
-      - name: Create PR directory and copy file
-        if: github.event_name == 'pull_request'
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          mkdir -p "PR_$PR_NUMBER"
-          cp qr-workflow-template.txt "PR_$PR_NUMBER/qr-workflow-template.yml"
-        
+        with:
+          ref: qr-code-workflows
       - name: Display file content
-        if: github.event_name == 'pull_request'
-        run: cat "PR_${{ github.event.pull_request.number }}/qr-workflow-template.yml"
-
-      - name: Display current branch and all branches
-        run: |
-          echo "Current branch:"
-          git branch --show-current
-          echo "All branches:"
-          git branch -a
-      - name: Commit and push changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .
-          git commit -m "Add qr-workflow-template.yml for PR ${{ github.event.pull_request.number }}"
-          git push
+        run: cat qr-workflow-template.txt
+      
