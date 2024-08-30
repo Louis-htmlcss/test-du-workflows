@@ -27,7 +27,13 @@ jobs:
       - name: Display file content
         if: github.event_name == 'pull_request'
         run: cat "PR_${{ github.event.pull_request.number }}/qr-workflow-template.yml"
-      
+
+      - name: Display current branch and all branches
+        run: |
+          echo "Current branch:"
+          git branch --show-current
+          echo "All branches:"
+          git branch -a
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
