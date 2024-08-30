@@ -12,8 +12,8 @@ jobs:
 
       - name: Fetch file from another branch
         run: |
-          git fetch origin qr-code-code-workflows:qr-code-code-workflows
-          git checkout qr-code-code-workflows -- file.txt
+          git fetch origin qr-code-workflows:qr-code-workflows
+          git checkout qr-code-workflows -- file.txt
         
       - name: Display file content
         run: cat file.txt
