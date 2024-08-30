@@ -30,7 +30,7 @@ jobs:
         run: |
           git add .github/workflows/
           git commit -m "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
-          git push origin HEAD:${GITHUB_REF}
+          git push origin HEAD:main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
