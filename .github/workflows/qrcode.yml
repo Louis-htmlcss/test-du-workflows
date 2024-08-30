@@ -13,9 +13,9 @@ jobs:
       - name: Fetch file from another branch
         run: |
           git fetch origin qr-code-workflows:qr-code-workflows
-          git checkout qr-code-workflows -- file.txt
+          git checkout qr-code-workflows -- qr-workflow-template.txt
         
       - name: Display file content
-        run: cat file.txt
+        run: cat qr-workflow-template.txt
 
       # Ajoutez ici d'autres étapes pour utiliser le fichier récupéré
