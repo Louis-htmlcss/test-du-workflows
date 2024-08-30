@@ -15,9 +15,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: qr-code-workflows
-          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Configure Git
         run: |
@@ -27,12 +24,11 @@ jobs:
       - name: Copy and rename file to .github/workflows directory
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          mkdir -p ".github/workflows/pr-$PR_NUMBER"
-          cp qr-workflow-template.txt ".github/workflows/pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"
+          cp qr-workflow-template.txt ".github/workflows/qr-workflow-$PR_NUMBER.yml"
       
       - name: Commit and push the new workflow file
         run: |
-          git add .github/workflows/
+          git add .github/workflows/qr-workflow-$PR_NUMBER.yml
           git commit -m "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
           git push origin qr-code-workflows
         env:
@@ -41,7 +37,7 @@ jobs:
       - name: Trigger the new workflow
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          WORKFLOW_FILE=".github/workflows/pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"
+          WORKFLOW_FILE=".github/workflows/qr-workflow-$PR_NUMBER.yml"
           gh workflow run $WORKFLOW_FILE --ref qr-code-workflows
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
