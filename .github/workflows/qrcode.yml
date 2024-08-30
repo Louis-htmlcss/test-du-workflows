@@ -28,9 +28,12 @@ jobs:
       
       - name: Commit and push the new workflow file
         run: |
+          git fetch origin main
+          git checkout main
+          git pull origin main
           git add .github/workflows/
           git commit -m "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
-          git push origin HEAD:main
+          git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
