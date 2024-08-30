@@ -31,4 +31,19 @@ jobs:
           commit_message: "Add qr-workflow-template.yml for PR #$PR_NUMBER"
           branch: qr-code-workflows
       
+      - name: Trigger QR Code Workflow
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          WORKFLOW_FILE="pr-$PR_NUMBER/qr-workflow-template.yml"
+          
+          if [ -f "$WORKFLOW_FILE" ]; then
+            echo "Triggering workflow for PR #$PR_NUMBER"
+            gh workflow run "$WORKFLOW_FILE"
+          else
+            echo "Workflow file not found for PR #$PR_NUMBER"
+            exit 1
+          fi
+      
       
