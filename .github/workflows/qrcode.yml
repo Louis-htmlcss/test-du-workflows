@@ -14,8 +14,7 @@ jobs:
 
       - name: Fetch file from another branch
         run: |
-          git fetch origin qr-code-workflows:qr-code-workflows
-          git checkout qr-code-workflows -- qr-workflow-template.txt
+          git checkout qr-code-workflows
         
       - name: Create PR directory and copy file
         if: github.event_name == 'pull_request'
