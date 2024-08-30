@@ -20,6 +20,11 @@ jobs:
       - name: Generate unique ID for PR
         run: echo "PR_ID=$(echo ${{ github.event.pull_request.number }}-$(date +%s))" >> $GITHUB_ENV
 
+      - name: Setup Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Read QR workflow template and create new workflow file
         run: |
           TEMPLATE=$(cat qr-code-workflows/qr-workflow-template.txt)
@@ -28,11 +33,6 @@ jobs:
             sed 's/{UNIQUE_ID}/${{ env.PR_ID }}/g' | \
             sed 's/{PR_BRANCH}/${{ github.event.pull_request.head.ref }}/g')
           echo "$WORKFLOW_CONTENT" > qr-code-workflows/qr-workflow-pr-${{ github.event.pull_request.number }}-${{ env.PR_ID }}.yml
-
-      - name: Setup Git
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
 
       - name: Commit and push QR workflow file
         working-directory: qr-code-workflows
@@ -73,6 +73,11 @@ jobs:
         with:
           ref: qr-code-workflows
 
+      - name: Setup Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Remove old workflow files
         run: |
           for file in qr-workflow-pr-${{ github.event.pull_request.number }}-*.yml; do
@@ -84,8 +89,6 @@ jobs:
       - name: Commit and push changes
         run: |
           if [[ -n $(git status -s) ]]; then
-            git config user.name github-actions
-            git config user.email github-actions@github.com
             git commit -m "Remove old QR workflows for PR #${{ github.event.pull_request.number }}"
             git push origin qr-code-workflows
           fi
