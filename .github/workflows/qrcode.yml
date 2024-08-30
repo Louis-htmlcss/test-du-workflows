@@ -17,11 +17,17 @@ jobs:
           git fetch origin qr-code-workflows:qr-code-workflows
           git checkout qr-code-workflows -- qr-workflow-template.txt
         
-      - name: Save file content to variable
+      - name: Display file content and save to variable
         id: file-content
-        run: echo "content=$(cat qr-workflow-template.txt)" >> $GITHUB_OUTPUT
+        run: |
+          echo "File content:"
+          cat qr-workflow-template.txt
+          echo "---"
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          cat qr-workflow-template.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Display file content
+      - name: Display file content from variable
         run: echo "${{ steps.file-content.outputs.content }}"
 
       - name: Comment on PR
