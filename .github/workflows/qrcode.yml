@@ -17,18 +17,19 @@ jobs:
           git fetch origin qr-code-workflows:qr-code-workflows
           git checkout qr-code-workflows -- qr-workflow-template.txt
         
-      - name: Display file content and save to variable
+      - name: Display and encode file content
         id: file-content
         run: |
           echo "File content:"
           cat qr-workflow-template.txt
           echo "---"
-          echo "content<<EOF" >> $GITHUB_OUTPUT
-          cat qr-workflow-template.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "content=$(base64 -w 0 qr-workflow-template.txt)" >> $GITHUB_OUTPUT
 
-      - name: Display file content from variable
+      - name: Display encoded file content
         run: echo "${{ steps.file-content.outputs.content }}"
+
+      - name: Decode and display file content
+        run: echo "${{ steps.file-content.outputs.content }}" | base64 -d
 
       - name: Comment on PR
         if: github.event_name == 'pull_request'
