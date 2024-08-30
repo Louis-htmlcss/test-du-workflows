@@ -16,3 +16,7 @@ jobs:
       - name: Display file content
         run: cat qr-workflow-template.txt
       
+      - name: Copy and rename file to directory
+        run: |
+          mkdir -p qr-code-workflows
+          cp qr-workflow-template.txt qr-code-workflows/qr-workflow-template.yml
