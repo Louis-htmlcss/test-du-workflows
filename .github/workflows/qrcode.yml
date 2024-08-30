@@ -22,11 +22,12 @@ jobs:
       
       - name: Copy and rename file to directory
         run: |
-          mkdir -p qr-code-workflows
-          cp qr-workflow-template.txt qr-code-workflows/qr-workflow-template.yml
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          mkdir -p "pr-$PR_NUMBER"
+          cp qr-workflow-template.txt "pr-$PR_NUMBER/qr-workflow-template.yml"
       
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Add qr-workflow-template.yml"
-
+          commit_message: "Add qr-workflow-template.yml for PR #$PR_NUMBER"
+      
       
