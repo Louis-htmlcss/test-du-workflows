@@ -5,11 +5,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
-# Add this permissions block
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
   fetch-file:
     runs-on: ubuntu-latest
@@ -22,39 +17,36 @@ jobs:
           git fetch origin qr-code-workflows:qr-code-workflows
           git checkout qr-code-workflows -- qr-workflow-template.txt
         
-      - name: Display and encode file content
-        id: file-content
-        run: |
-          echo "File content:"
-          cat qr-workflow-template.txt
-          echo "---"
-          echo "content=$(base64 -w 0 qr-workflow-template.txt)" >> $GITHUB_OUTPUT
-
-      - name: Display encoded file content
-        run: echo "${{ steps.file-content.outputs.content }}"
-
-      - name: Decode and display file content
-        run: echo "${{ steps.file-content.outputs.content }}" | base64 -d
-
-      - name: Comment on PR
+      - name: Create PR directory and copy file
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'Le fichier a été récupéré avec succès depuis la branche qr-code-workflows.'
-            })
-
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          mkdir -p "PR_$PR_NUMBER"
+          cp qr-workflow-template.txt "PR_$PR_NUMBER/qr-workflow-template.yml"
+        
+      - name: Display file content
+        if: github.event_name == 'pull_request'
+        run: cat "PR_${{ github.event.pull_request.number }}/qr-workflow-template.yml"
+      
       - name: Display PR number
         if: github.event_name == 'pull_request'
         run: echo "This workflow was triggered by PR #${{ github.event.pull_request.number }}"
       
-      - name:  create directory in the branch qr-code-workflows with the name of the PR
-        run: mkdir qr-code-workflows/${{ github.event.pull_request.number }}
+      - name: Commit and push changes
+        if: github.event_name == 'pull_request'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add "PR_${{ github.event.pull_request.number }}/qr-workflow-template.yml"
+          git commit -m "Add qr-workflow-template.yml for PR #${{ github.event.pull_request.number }}"
+          git push
 
-
-      
+      - name: Delete PR directory
+        if: github.event_name == 'pull_request'
+        run: |
+          rm -rf "PR_${{ github.event.pull_request.number }}"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "Remove PR_${{ github.event.pull_request.number }} directory"
+          git push
