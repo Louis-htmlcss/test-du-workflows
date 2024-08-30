@@ -35,7 +35,7 @@ jobs:
           git commit -m "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
           git push origin main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Trigger the new workflow
         run: |
@@ -43,4 +43,4 @@ jobs:
           WORKFLOW_FILE="qr-workflow-$PR_NUMBER.yml"
           gh workflow run $WORKFLOW_FILE
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
