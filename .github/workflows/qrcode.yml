@@ -20,15 +20,15 @@ jobs:
       - name: Display file content
         run: cat qr-workflow-template.txt
       
-      - name: Copy and rename file to directory
+      - name: Copy and rename file to .github/workflows directory
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          mkdir -p "pr-$PR_NUMBER"
-          cp qr-workflow-template.txt "pr-$PR_NUMBER/qr-workflow-template.yml"
+          mkdir -p ".github/workflows/pr-$PR_NUMBER"
+          cp qr-workflow-template.txt ".github/workflows/pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"
       
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Add qr-workflow-template.yml for PR #$PR_NUMBER"
+          commit_message: "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
           branch: qr-code-workflows
       
       - name: Trigger QR Code Workflow
@@ -36,7 +36,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          WORKFLOW_FILE="pr-$PR_NUMBER/qr-workflow-template.yml"
+          WORKFLOW_FILE=".github/workflows/pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"
           
           if [ -f "$WORKFLOW_FILE" ]; then
             echo "Triggering workflow for PR #$PR_NUMBER"
