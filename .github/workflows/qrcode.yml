@@ -2,20 +2,47 @@ name: Fetch File from Another Branch
 
 on:
   workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   fetch-file:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Fetch file from another branch
         run: |
           git fetch origin qr-code-workflows:qr-code-workflows
           git checkout qr-code-workflows -- qr-workflow-template.txt
         
-      - name: Display file content
-        run: cat qr-workflow-template.txt
+      - name: Save file content to variable
+        id: file-content
+        run: echo "content=$(cat qr-workflow-template.txt)" >> $GITHUB_OUTPUT
 
-      # Ajoutez ici d'autres étapes pour utiliser le fichier récupéré
+      - name: Display file content
+        run: echo "${{ steps.file-content.outputs.content }}"
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Le fichier a été récupéré avec succès depuis la branche qr-code-workflows.'
+            })
+
+      - name: Display PR number
+        if: github.event_name == 'pull_request'
+        run: echo "This workflow was triggered by PR #${{ github.event.pull_request.number }}"
+      
+      - name:  create directory in the branch qr-code-workflows with the name of the PR
+        run: mkdir qr-code-workflows/${{ github.event.pull_request.number }}
+
+
+      
