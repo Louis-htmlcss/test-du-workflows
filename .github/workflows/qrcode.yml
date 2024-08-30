@@ -1,4 +1,4 @@
-name: Fetch File from Another Branch and Push Changes
+name: Create QR Code Workflow for PR
 
 on:
   workflow_dispatch:
@@ -6,11 +6,11 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  fetch-file-and-push:
+  create-qr-workflow:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write  # Permission to push changes to the repository
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -24,20 +24,20 @@ jobs:
       - name: Copy and rename file to .github/workflows directory
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
           cp qr-workflow-template.txt ".github/workflows/qr-workflow-$PR_NUMBER.yml"
       
       - name: Commit and push the new workflow file
         run: |
-          git add ".github/workflows/qr-workflow-${{ env.PR_NUMBER }}.yml"
-          git commit -m "Add qr-workflow-${{ env.PR_NUMBER }}.yml for PR #${{ env.PR_NUMBER }}"
-          git push origin qr-code-workflows
+          git add .github/workflows/
+          git commit -m "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
+          git push origin HEAD:${GITHUB_REF}
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trigger the new workflow
         run: |
-          WORKFLOW_FILE=".github/workflows/qr-workflow-${{ env.PR_NUMBER }}.yml"
-          gh workflow run $WORKFLOW_FILE --ref qr-code-workflows
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          WORKFLOW_FILE="qr-workflow-$PR_NUMBER.yml"
+          gh workflow run $WORKFLOW_FILE
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
