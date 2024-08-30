@@ -11,7 +11,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+      
+      - name: Display current branch and all branches
+        run: |
+          echo "Current branch:"
+          git branch --show-current
+          echo "All branches:"
+          git branch -a
       - name: Fetch file from another branch
         run: |
           git checkout qr-code-workflows
