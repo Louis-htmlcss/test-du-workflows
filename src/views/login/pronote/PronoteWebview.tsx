@@ -1,0 +1,382 @@
+import React, { createRef, useEffect, useRef, useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Dimensions,
+  KeyboardAvoidingView,
+  ActivityIndicator,
+  Platform,
+  Text,
+} from "react-native";
+
+import { WebView } from "react-native-webview";
+import type { Screen } from "@/router/helpers/types";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { useTheme } from "@react-navigation/native";
+import MaskStars from "@/components/FirstInstallation/MaskStars";
+
+import pronote from "pawnote";
+
+import { Audio } from "expo-av";
+
+import { useAccounts, useCurrentAccount } from "@/stores/account";
+import { Account, AccountService } from "@/stores/account/types";
+import uuid from "@/utils/uuid-v4";
+import downloadAsBase64 from "@/utils/external/download-as-base64";
+import defaultPersonalization from "@/services/pronote/default-personalization";
+import extract_pronote_name from "@/utils/format/extract_pronote_name";
+
+const PronoteWebview: Screen<"PronoteWebview"> = ({ route, navigation }) => {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+
+  const [loading, setLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [showWebView, setShowWebView] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
+
+  const [currentURL, setCurrentURL] = useState("");
+
+  const [deviceUUID] = useState(uuid());
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [sound2, setSound2] = useState<Audio.Sound | null>(null);
+
+  const [loginStep, setLoginStep] = useState("Enregistrement de votre appareil auprès de votre établissement...");
+
+  const instanceURL = route.params.instanceURL.toLowerCase();
+
+  const infoMobileURL = instanceURL + "/InfoMobileApp.json?id=0D264427-EEFC-4810-A9E9-346942A862A4";
+
+  let webViewRef = createRef<WebView>();
+  let currentLoginStateIntervalRef = useRef<ReturnType<
+        typeof setInterval
+  > | null>(null);
+
+  const createStoredAccount = useAccounts((store) => store.create);
+  const switchTo = useCurrentAccount((store) => store.switchTo);
+
+  const PRONOTE_COOKIE_EXPIRED = new Date(0).toUTCString();
+  const PRONOTE_COOKIE_VALIDATION_EXPIRES = new Date(
+    new Date().getTime() + 5 * 60 * 1000
+  ).toUTCString();
+  const PRONOTE_COOKIE_LANGUAGE_EXPIRES = new Date(
+    new Date().getTime() + 365 * 24 * 60 * 60 * 1000
+  ).toUTCString();
+
+  useEffect(() => {
+    const loadSound = async () => {
+      const { sound } = await Audio.Sound.createAsync(
+        require("@/../assets/sound/3.wav")
+      );
+      setSound(sound);
+      const sound2 = await Audio.Sound.createAsync(
+        require("@/../assets/sound/4.wav")
+      );
+      setSound2(sound2.sound);
+      await sound.replayAsync();
+    };
+
+    loadSound();
+
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+      if (sound2) {
+        sound2.unloadAsync();
+      }
+    };
+  }, []);
+
+  const playSound = async () => {
+    if (sound) {
+      await sound2?.replayAsync();
+    }
+  };
+
+  useEffect(() => {
+    playSound();
+  }, []);
+
+  const INJECT_PRONOTE_JSON = `
+    (function () {
+      try {
+        const json = JSON.parse(document.body.innerText);
+        const lJetonCas = !!json && !!json.CAS && json.CAS.jetonCAS;
+        
+        document.cookie = "appliMobile=; expires=${PRONOTE_COOKIE_EXPIRED}"
+
+        if (!!lJetonCas) {
+          document.cookie = "validationAppliMobile=" + lJetonCas + "; expires=${PRONOTE_COOKIE_VALIDATION_EXPIRES}";
+          document.cookie = "uuidAppliMobile=${deviceUUID}; expires=${PRONOTE_COOKIE_VALIDATION_EXPIRES}";
+          // 1036 = French
+          document.cookie = "ielang=1036; expires=${PRONOTE_COOKIE_LANGUAGE_EXPIRES}";
+        }
+
+        window.location.assign("${instanceURL}/mobile.eleve.html?fd=1");
+      }
+      catch {
+        // TODO: Handle error
+      }
+    })();
+  `.trim();
+
+  /**
+     * Creates the hook inside the webview when logging in.
+     * Also hides the "Download PRONOTE app" button.
+     */
+  const INJECT_PRONOTE_INITIAL_LOGIN_HOOK = `
+    (function () {
+      window.hookAccesDepuisAppli = function() {
+        this.passerEnModeValidationAppliMobile('', '${deviceUUID}');
+      };
+      
+      return '';
+    })();
+  `.trim();
+
+  const INJECT_PRONOTE_CURRENT_LOGIN_STATE = `
+    (function () {
+      setInterval(function() {
+        const state = window && window.loginState ? window.loginState : void 0;
+
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'pronote.loginState',
+          data: state
+        }));
+      }, 1000);
+    })();
+  `.trim();
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <MaskStars />
+      <KeyboardAvoidingView behavior="padding">
+        <View
+          style={[
+            {
+              flex: 1,
+              marginTop: Platform.OS === "ios" ? 46 : 56,
+              marginBottom: 10,
+              width: Dimensions.get("window").width - 20,
+              borderRadius: 10,
+              borderCurve: "continuous",
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.card,
+              shadowColor: theme.colors.border,
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 1,
+              shadowRadius: 0,
+            },
+            Platform.OS === "android" && {
+              overflow: "hidden",
+              elevation: 4,
+            }
+          ]}
+        >
+          {!showWebView && (
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 9999,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 20,
+              }}
+            >
+              <ActivityIndicator
+                size="large"
+                color={theme.colors.text}
+              />
+
+              <Text
+                style={{
+                  color: theme.colors.text,
+                  marginTop: 10,
+                  fontSize: 18,
+                  fontFamily: "semibold",
+                  textAlign: "center",
+                }}
+              >
+                Connexion à Pronote
+              </Text>
+
+              <Text
+                style={{
+                  color: theme.colors.text,
+                  marginTop: 6,
+                  fontSize: 16,
+                  lineHeight: 20,
+                  fontFamily: "medium",
+                  opacity: 0.5,
+                  textAlign: "center",
+                }}
+              >
+                {loginStep}
+              </Text>
+            </View>
+          )}
+
+          <WebView
+            ref={webViewRef}
+            style={[
+              styles.webview,
+              {
+                width: "100%",
+                height: "100%",
+                opacity: showWebView ? 1 : 0,
+                borderRadius: 10,
+                borderCurve: "continuous",
+                overflow: "hidden",
+                zIndex: 1,
+              },
+            ]}
+            source={{ uri: infoMobileURL }}
+            setSupportMultipleWindows={false}
+            onLoadProgress={({ nativeEvent }) => {
+              setLoadProgress(nativeEvent.progress);
+            }}
+            onError={(e) => {
+              console.error("Pronote webview error", e);
+            }}
+            onLoadStart={(e) => {
+              const { url } = e.nativeEvent;
+              setCurrentURL(url);
+
+              setLoading(true);
+            }}
+            onMessage={async ({ nativeEvent }) => {
+              const message = JSON.parse(nativeEvent.data);
+
+              if (message.type === "pronote.loginState") {
+                if (loggingIn) return;
+                if (!message.data) return;
+                if (message.data.status !== 0) return;
+                setShowWebView(false);
+                setLoginStep("Obtention des informations de connexion...");
+                setLoggingIn(true);
+
+                if (currentLoginStateIntervalRef.current)
+                  clearInterval(currentLoginStateIntervalRef.current);
+
+                const session = pronote.createSessionHandle();
+                const refresh = await pronote.loginToken(session,
+                  {
+                    url: instanceURL,
+                    kind: pronote.AccountKind.STUDENT,
+                    username: message.data.login,
+                    token: message.data.mdp,
+                    deviceUUID
+                  }
+                );
+
+                const user = session.user.resources[0];
+                const name = user.name;
+
+                const account: Account = {
+                  instance: session,
+
+                  localID: deviceUUID,
+                  service: AccountService.Pronote,
+
+                  isExternal: false,
+                  linkedExternalLocalIDs: [],
+
+                  name,
+                  className: user.className,
+                  schoolName: user.establishmentName,
+                  studentName: {
+                    first: extract_pronote_name(name).givenName,
+                    last: extract_pronote_name(name).familyName
+                  },
+
+                  authentication: { ...refresh, deviceUUID },
+                  personalization: await defaultPersonalization(session)
+                };
+
+                pronote.startPresenceInterval(session);
+                createStoredAccount(account);
+                setLoading(false);
+                switchTo(account);
+
+                // We need to wait a tick to make sure the account is set before navigating.
+                queueMicrotask(() => {
+                  // Reset the navigation stack to the "Home" screen.
+                  // Prevents the user from going back to the login screen.
+                  playSound();
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: "AccountCreated" }],
+                  });
+                });
+              }
+            }}
+            onLoadEnd={(e) => {
+              const { url } = e.nativeEvent;
+              console.log("Pronote webview load end", url);
+
+              webViewRef.current?.injectJavaScript(
+                INJECT_PRONOTE_INITIAL_LOGIN_HOOK
+              );
+
+              if (
+                url.includes(
+                  "InfoMobileApp.json?id=0D264427-EEFC-4810-A9E9-346942A862A4"
+                )
+              ) {
+                webViewRef.current?.injectJavaScript(
+                  INJECT_PRONOTE_JSON
+                );
+              } else {
+                setLoading(false);
+                setShowWebView(true);
+                if (url.includes("mobile.eleve.html")) {
+
+
+                  webViewRef.current?.injectJavaScript(
+                    INJECT_PRONOTE_INITIAL_LOGIN_HOOK
+                  );
+                  webViewRef.current?.injectJavaScript(
+                    INJECT_PRONOTE_CURRENT_LOGIN_STATE
+                  );
+
+                  /* if (currentLoginStateIntervalRef.current) clearInterval(currentLoginStateIntervalRef.current); */
+                  /*currentLoginStateIntervalRef.current = setInterval(() => {
+                    webViewRef.current?.injectJavaScript(INJECT_PRONOTE_CURRENT_LOGIN_STATE);
+                  }, 250);*/
+                }
+              }
+            }}
+            incognito={true} // prevent to keep cookies on webview load
+            userAgent="Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
+          />
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    gap: 20,
+  },
+
+  webview: {
+    flex: 1,
+  },
+});
+
+export default PronoteWebview;

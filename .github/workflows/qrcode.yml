@@ -1,0 +1,28 @@
+name: PR QR Code Setup
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  setup-and-run-qr-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      
+      - name: Generate unique PR identifier
+        run: echo "PR_ID=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+      
+      - name: Create QR code workflow
+        run: |
+          mkdir -p .github/workflows
+          cat << EOF > .github/workflows/qr-code-${{ env.PR_ID }}.yml
+          $(cat workflows-secondaires.txt)
+          EOF
+      
+      - name: Run QR code workflow
+        uses: ./.github/workflows/qr-code-${{ env.PR_ID }}.yml
+      
+      - name: Clean up
+        run: rm .github/workflows/qr-code-${{ env.PR_ID }}.yml

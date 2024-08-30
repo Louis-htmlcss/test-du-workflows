@@ -1,0 +1,305 @@
+// LOAD THEM AS A JAVASCRIPT, WE CAN'T NAME IT JS BECAUSE IT WILL BE EXECUTED IN EXPO
+
+document.addEventListener("touchstart", function(){}, false);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////                COMPONENTS               ////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+function generate_unique_style_id() {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+class PapiHeader extends HTMLElement {
+  constructor() {
+    super();
+    // Parameter
+    this.title = this.getAttribute('title');
+    this.subtitle = this.getAttribute('subtitle');
+    this.image = this.getAttribute('image');
+    this.color = this.getAttribute('color');
+    
+    this.unique_style_id = generate_unique_style_id();
+
+    // Attach a shadow root to the element.
+    this.attachShadow({ mode: 'open' });
+  }
+
+  connectedCallback() {
+    this.shadowRoot.innerHTML = `
+    <style>
+        .papi_header_container_${this.unique_style_id} {
+            height: 211px;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: var(--color-background);
+            box-shadow: 0px 1.5px 6px 0px rgba(0, 0, 0, 0.05);
+        }
+        .papi_header_image_container_${this.unique_style_id} {
+            background: #E6FCE2;
+            height: 144px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .papi_header_image_container_${this.unique_style_id} img {
+            height: 120px;
+            width: 150px;
+            object-fit: contain;
+        }
+        .papi_header_title_container_${this.unique_style_id} {
+            border-top: 1px solid rgba(0, 0, 0, 0.15);
+            height: 47px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 10px;
+        }
+        .papi_header_title_container_${this.unique_style_id} h1 {
+            font-size: 17px;
+            font-weight: 600;
+            margin: 0;
+            width: 100%;
+            margin-bottom: -2px;
+        }
+        .papi_header_title_container_${this.unique_style_id} h2 {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0;
+            color: rgba(0, 0, 0, 0.45);
+            width: 100%;
+        }
+    </style>
+      <div class="papi_header_container_${this.unique_style_id}">
+        <div class="papi_header_image_container_${this.unique_style_id}" style="background-color: ${this.color}">
+            <img src="${this.image}">
+        </div>
+        <div class="papi_header_title_container_${this.unique_style_id}">
+            <h1>${this.title}</h1>
+            <h2>${this.subtitle}</h2>
+        </div>
+      </div>
+    `;
+  }
+}
+
+class PapiList extends HTMLElement {
+  constructor() {
+    super();
+    // Parameter
+    this.header = this.getAttribute('header') ? this.getAttribute('header'): "";
+
+    this.unique_style_id = generate_unique_style_id();
+
+    // Attach a shadow root to the element.
+    this.attachShadow({ mode: 'open' });
+  }
+
+  connectedCallback() {
+    this.shadowRoot.innerHTML = `
+        <style>
+            .papi_list_container_${this.unique_style_id} {
+                border-radius: 12px;
+                border: 1px solid rgba(0, 0, 0, 0.15);
+                box-shadow: 0px 1.5px 6px 0px rgba(0, 0, 0, 0.05);
+                overflow: hidden;
+            }
+            .papi_item_container_${this.unique_style_id} {
+                min-height: 35px; 
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                cursor: pointer;
+            }
+            .papi_item_container_${this.unique_style_id}:active {
+                background-color: rgba(0, 0, 0, 0.05);
+            }
+        </style>
+      ${this.header != "" ? `
+        <p
+            style="
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 1;
+                align-self: stretch;
+                opacity: .4;
+                margin-bottom: 10px;
+                text-transform: uppercase;
+                font-weight: 500;
+                font-size: 13px;
+            "
+        >${this.header}</p>
+      `:''}
+      <div class="papi_list_container_${this.unique_style_id}">
+      ${Array.from(this.children).map((child, index) => `
+        ${child.nodeName === 'PAPI-ITEM' ? `
+          <div class="papi_item_container_${this.unique_style_id}">
+            ${child.getAttribute('leading') ? child.getAttribute('leading') : ''}
+            ${child.outerHTML}
+            ${child.getAttribute('trailing') ? child.getAttribute('trailing') : ''}
+          </div>
+          ${index != this.children.length - 1 ? `<div style="width: 100%; height: 1px; background-color: rgba(0, 0, 0, 0.15); margin-left: 45px;"></div>`:''}
+        `:''}
+      `).join('')}
+      </div>
+    `
+  }
+}
+
+class PapiItemTitle extends HTMLElement {
+  constructor() {
+    super();
+
+    // Attach a shadow root to the element.
+    this.attachShadow({ mode: 'open' });
+  }
+
+  connectedCallback() {
+    this.shadowRoot.innerHTML = `
+      <p style="font-size: 17px; font-weight: 600; margin: 0; line-height: 20px">${this.innerHTML}</p>
+    `;
+  }
+}
+
+class PapiItemSubtitle extends HTMLElement {
+  constructor() {
+    super();
+
+    // Attach a shadow root to the element.
+    this.attachShadow({ mode: 'open' });
+  }
+
+  connectedCallback() {
+    this.shadowRoot.innerHTML = `
+      <p style="font-size: 15px; font-weight: 400; margin: 0; color: rgba(0, 0, 0, 0.6); line-height: 18px;">${this.innerHTML}</p>
+    `;
+  }
+}
+
+customElements.define('papi-header', PapiHeader);
+customElements.define('papi-list', PapiList);
+customElements.define('papi-item-title', PapiItemTitle);
+customElements.define('papi-item-subtitle', PapiItemSubtitle);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////                 CONSOLE                 ////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+console.log = function(message) {
+  window.ReactNativeWebView.postMessage(JSON.stringify({type: "log", message: message}));
+  document.getElementById("devtools").classList.remove("devtools_hidden");
+  document.getElementById("devtools").children[0].style.display = "flex";
+  document.getElementById("devtools").children[0].classList.remove("devtools_animate_text");
+  document.getElementById("devtools").children[0].classList.add("devtools_animate_text");
+  document.getElementById("devtools_log_count").innerText = parseInt(document.getElementById("devtools_log_count").innerHTML) + 1;
+}
+console.error = function(message) {
+  window.ReactNativeWebView.postMessage(JSON.stringify({type: "error", message: message}));
+    document.getElementById("devtools").classList.remove("devtools_hidden");
+    document.getElementById("devtools").children[1].style.display = "flex";
+  document.getElementById("devtools").children[1].classList.remove("devtools_animate_text");
+  document.getElementById("devtools").children[1].classList.add("devtools_animate_text");
+    document.getElementById("devtools_error_count").innerText = parseInt(document.getElementById("devtools_error_count").innerHTML) + 1;
+}
+console.warn = function(message) {
+  window.ReactNativeWebView.postMessage(JSON.stringify({type: "warn", message: message}));
+    document.getElementById("devtools").classList.remove("devtools_hidden");
+    document.getElementById("devtools").children[2].style.display = "flex";
+  document.getElementById("devtools").children[2].classList.remove("devtools_animate_text");
+  document.getElementById("devtools").children[2].classList.add("devtools_animate_text");
+    document.getElementById("devtools_warn_count").innerText = parseInt(document.getElementById("devtools_warn_count").innerHTML) + 1;
+}
+console.info = function(message) {
+  window.ReactNativeWebView.postMessage(JSON.stringify({type: "info", message: message}));
+    document.getElementById("devtools").classList.remove("devtools_hidden");
+    document.getElementById("devtools").children[3].style.display = "flex";
+  document.getElementById("devtools").children[3].classList.remove("devtools_animate_text");
+  document.getElementById("devtools").children[3].classList.add("devtools_animate_text");
+    document.getElementById("devtools_info_count").innerText = parseInt(document.getElementById("devtools_info_count").innerHTML) + 1;
+}
+
+let devtools = document.createElement('div');
+devtools.id = "devtools";
+devtools.classList.add("devtools");
+devtools.classList.add("devtools_hidden");
+devtools.innerHTML = `
+<div style="display: none; gap: 10px; align-items: center;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    <p id="devtools_log_count">0</p>
+</div>
+<div style="display: none; gap: 10px; align-items: center">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#BE0B00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-x"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+    <p id="devtools_error_count" style="color: #BE0B00">0</p>
+</div>
+<div style="display: none; gap: 10px; align-items: center">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CF6B0F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <p id="devtools_warn_count" style="color: #CF6B0F">0</p>
+</div>
+<div style="display: none; gap: 10px; align-items: center">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E7CCB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-alert"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+    <p style="color: #0E7CCB" id="devtools_info_count">0</p>
+</div>
+`;
+devtools.onclick = function() {
+  window.ReactNativeWebView.postMessage(JSON.stringify({type: "open_logs"}));
+}
+document.body.appendChild(devtools);
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////                  TITLE                  ////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+setInterval(() => {
+  let title = document.title ? document.title : "";
+  window.ReactNativeWebView.postMessage(JSON.stringify({type: "title", title: title}));
+}, 10);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////                   META                  ////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+// MOBILE META
+let mobileMeta = document.querySelector('meta[name="viewport"]');
+if (!mobileMeta) {
+  mobileMeta = document.createElement('meta');
+  mobileMeta.name = "viewport";
+  mobileMeta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+  document.head.appendChild(mobileMeta);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////                STYLESHEET               ////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+let styleSheet = document.createElement('style');
+styleSheet.type = "text/css";
+styleSheet.innerHTML = `{{STYLESHEET}}`;
+document.head.appendChild(styleSheet);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////               PAPILLON API              ////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+class papillon {
+  constructor() {
+
+  }
+
+  // Authorization
+  request_permission_location() {
+    window.ReactNativeWebView.postMessage(JSON.stringify({type: "request_permission", permission: 'PERM_USER_LOCATION'}));
+  }
+
+    // Navigation
+  navigate(to, data) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({type: "navigation_navigate", to: to, params: data}));
+  }
+}
+
+window.addEventListener("message", function(event) {
+  alert(event.data);
+});
