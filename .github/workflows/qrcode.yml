@@ -10,13 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: write  # Permission to push changes to the repository
+      actions: write   # Permission to create or update workflows
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: qr-code-workflows
+          ref: qr-code-workflows  # Check out the branch containing the template file
+
       - name: Display file content
         run: cat qr-workflow-template.txt
       
@@ -25,25 +27,23 @@ jobs:
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
           mkdir -p ".github/workflows/pr-$PR_NUMBER"
           cp qr-workflow-template.txt ".github/workflows/pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"
-      
-      - uses: stefanzweifel/git-auto-commit-action@v5
+
+      - name: Commit and push the new workflow file
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
-          branch: qr-code-workflows
-      
-      - name: Trigger QR Code Workflow
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          branch: qr-code-workflows  # Push the changes to the same branch
+    
+  trigger-new-workflow:
+    needs: fetch-file-and-push  # This job waits for the previous job to complete
+    runs-on: ubuntu-latest
+    
+    permissions:
+      actions: write  # Permission to trigger the workflow
+
+    steps:
+      - name: Trigger the new workflow
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          WORKFLOW_FILE=".github/workflows/pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"
-          
-          if [ -f "$WORKFLOW_FILE" ]; then
-            echo "Triggering workflow for PR #$PR_NUMBER"
-            gh workflow run "$WORKFLOW_FILE"
-          else
-            echo "Workflow file not found for PR #$PR_NUMBER"
-            exit 1
-          fi
-      
-      
+          gh workflow run "pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"  # Trigger the new workflow
+
