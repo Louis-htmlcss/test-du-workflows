@@ -8,8 +8,14 @@ jobs:
   setup_qr_workflow:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout main branch
         uses: actions/checkout@v3
+
+      - name: Checkout qr-code-workflows branch
+        uses: actions/checkout@v3
+        with:
+          ref: qr-code-workflows
+          path: qr-code-workflows
 
       - name: Generate unique ID for PR
         run: echo "PR_ID=$(echo ${{ github.event.pull_request.number }}-$(date +%s))" >> $GITHUB_ENV
@@ -17,7 +23,7 @@ jobs:
       - name: Read QR workflow template
         id: template
         run: |
-          TEMPLATE=$(cat qr-workflow-template.txt)
+          TEMPLATE=$(cat qr-code-workflows/qr-workflow-template.txt)
           echo "TEMPLATE<<EOF" >> $GITHUB_OUTPUT
           echo "$TEMPLATE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -28,19 +34,15 @@ jobs:
             sed 's/{PR_NUMBER}/${{ github.event.pull_request.number }}/g' | \
             sed 's/{UNIQUE_ID}/${{ env.PR_ID }}/g' | \
             sed 's/{PR_BRANCH}/${{ github.event.pull_request.head.ref }}/g')
-          echo "$WORKFLOW_CONTENT" > qr-workflow-pr-${{ github.event.pull_request.number }}-${{ env.PR_ID }}.yml
+          echo "$WORKFLOW_CONTENT" > qr-code-workflows/qr-workflow-pr-${{ github.event.pull_request.number }}-${{ env.PR_ID }}.yml
 
       - name: Setup Git
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
 
-      - name: Create or switch to qr-code-workflows branch
-        run: |
-          git fetch origin qr-code-workflows || true
-          git checkout qr-code-workflows || git checkout -b qr-code-workflows
-
       - name: Commit and push QR workflow file
+        working-directory: qr-code-workflows
         run: |
           git add qr-workflow-pr-${{ github.event.pull_request.number }}-${{ env.PR_ID }}.yml
           git commit -m "Add QR workflow for PR #${{ github.event.pull_request.number }}"
