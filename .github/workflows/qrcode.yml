@@ -20,17 +20,10 @@ jobs:
       - name: Generate unique ID for PR
         run: echo "PR_ID=$(echo ${{ github.event.pull_request.number }}-$(date +%s))" >> $GITHUB_ENV
 
-      - name: Read QR workflow template
-        id: template
+      - name: Read QR workflow template and create new workflow file
         run: |
           TEMPLATE=$(cat qr-code-workflows/qr-workflow-template.txt)
-          echo "TEMPLATE<<EOF" >> $GITHUB_OUTPUT
-          echo "$TEMPLATE" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create QR workflow file
-        run: |
-          WORKFLOW_CONTENT=$(echo '${{ steps.template.outputs.TEMPLATE }}' | \
+          WORKFLOW_CONTENT=$(echo "$TEMPLATE" | \
             sed 's/{PR_NUMBER}/${{ github.event.pull_request.number }}/g' | \
             sed 's/{UNIQUE_ID}/${{ env.PR_ID }}/g' | \
             sed 's/{PR_BRANCH}/${{ github.event.pull_request.head.ref }}/g')
