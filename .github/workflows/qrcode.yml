@@ -1,94 +1,21 @@
-name: PR QR Code Generator
+name: Fetch File from Another Branch
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
-  setup_qr_workflow:
+  fetch-file:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main branch
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Checkout qr-code-workflows branch
-        uses: actions/checkout@v3
-        with:
-          ref: qr-code-workflows
-          path: qr-code-workflows
-
-      - name: Generate unique ID for PR
-        run: echo "PR_ID=$(echo ${{ github.event.pull_request.number }}-$(date +%s))" >> $GITHUB_ENV
-
-      - name: Setup Git
+      - name: Fetch file from another branch
         run: |
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin qrcode-code-workflows:qrcode-code-workflows
+          git checkout qrcode-code-workflows -- file.txt
+        
+      - name: Display file content
+        run: cat path/to/your/file.txt
 
-      - name: Read QR workflow template and create new workflow file
-        run: |
-          TEMPLATE=$(cat qr-code-workflows/qr-workflow-template.txt)
-          WORKFLOW_CONTENT=$(echo "$TEMPLATE" | \
-            sed 's/{PR_NUMBER}/${{ github.event.pull_request.number }}/g' | \
-            sed 's/{UNIQUE_ID}/${{ env.PR_ID }}/g' | \
-            sed 's/{PR_BRANCH}/${{ github.event.pull_request.head.ref }}/g')
-          echo "$WORKFLOW_CONTENT" > qr-code-workflows/qr-workflow-pr-${{ github.event.pull_request.number }}-${{ env.PR_ID }}.yml
-
-      - name: Commit and push QR workflow file
-        working-directory: qr-code-workflows
-        run: |
-          git add qr-workflow-pr-${{ github.event.pull_request.number }}-${{ env.PR_ID }}.yml
-          git commit -m "Add QR workflow for PR #${{ github.event.pull_request.number }}"
-          git push origin qr-code-workflows
-
-      - name: Trigger QR workflow
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: `qr-workflow-pr-${{ github.event.pull_request.number }}-${{ env.PR_ID }}.yml`,
-              ref: 'qr-code-workflows'
-            });
-
-      - name: Comment on PR
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'QR code generation for this PR has been initiated. The QR code will be posted in a separate comment once it\'s ready.'
-            })
-
-  cleanup_old_workflows:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout qr-code-workflows branch
-        uses: actions/checkout@v3
-        with:
-          ref: qr-code-workflows
-
-      - name: Setup Git
-        run: |
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Remove old workflow files
-        run: |
-          for file in qr-workflow-pr-${{ github.event.pull_request.number }}-*.yml; do
-            if [ -f "$file" ]; then
-              git rm "$file"
-            fi
-          done
-
-      - name: Commit and push changes
-        run: |
-          if [[ -n $(git status -s) ]]; then
-            git commit -m "Remove old QR workflows for PR #${{ github.event.pull_request.number }}"
-            git push origin qr-code-workflows
-          fi
+      # Ajoutez ici d'autres étapes pour utiliser le fichier récupéré
