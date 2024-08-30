@@ -7,6 +7,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  workflows: write  # Ajoutez cette ligne
 
 jobs:
   setup-qr-workflow:
@@ -16,7 +17,7 @@ jobs:
         with:
           ref: qr-code-workflows
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.WORKFLOW_PAT }}  # Utilisez un PAT ici
       
       - name: Generate unique PR identifier
         run: echo "PR_ID=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
@@ -38,4 +39,4 @@ jobs:
         run: |
           gh workflow run qr-code-${{ env.PR_ID }}.yml --ref qr-code-workflows
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.WORKFLOW_PAT }}  # Utilisez le même PAT ici
