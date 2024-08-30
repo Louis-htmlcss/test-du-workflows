@@ -11,39 +11,36 @@ jobs:
 
     permissions:
       contents: write  # Permission to push changes to the repository
-      actions: write   # Permission to create or update workflows
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: qr-code-workflows  # Check out the branch containing the template file
+          ref: qr-code-workflows
 
-      - name: Display file content
-        run: cat qr-workflow-template.txt
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       
       - name: Copy and rename file to .github/workflows directory
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
           mkdir -p ".github/workflows/pr-$PR_NUMBER"
           cp qr-workflow-template.txt ".github/workflows/pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"
-
+      
       - name: Commit and push the new workflow file
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
-          branch: qr-code-workflows  # Push the changes to the same branch
-    
-  trigger-new-workflow:
-    needs: fetch-file-and-push  # This job waits for the previous job to complete
-    runs-on: ubuntu-latest
-    
-    permissions:
-      actions: write  # Permission to trigger the workflow
+        run: |
+          git add .github/workflows/
+          git commit -m "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
+          git push origin qr-code-workflows
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
-    steps:
       - name: Trigger the new workflow
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          gh workflow run "pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"  # Trigger the new workflow
-
+          WORKFLOW_FILE=".github/workflows/pr-$PR_NUMBER/qr-workflow-$PR_NUMBER.yml"
+          gh workflow run $WORKFLOW_FILE --ref qr-code-workflows
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
