@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Fetch file from another branch
         run: |
@@ -34,9 +36,10 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git checkout -b pr-${{ github.event.pull_request.number }}-qr-workflow
           git add "PR_${{ github.event.pull_request.number }}/qr-workflow-template.yml"
           git commit -m "Add qr-workflow-template.yml for PR #${{ github.event.pull_request.number }}"
-          git push
+          git push origin pr-${{ github.event.pull_request.number }}-qr-workflow
 
       - name: Delete PR directory
         if: github.event_name == 'pull_request'
