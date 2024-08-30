@@ -17,6 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: qr-code-workflows
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Configure Git
         run: |
