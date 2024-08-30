@@ -24,20 +24,20 @@ jobs:
       - name: Copy and rename file to .github/workflows directory
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
           cp qr-workflow-template.txt ".github/workflows/qr-workflow-$PR_NUMBER.yml"
       
       - name: Commit and push the new workflow file
         run: |
-          git add .github/workflows/qr-workflow-$PR_NUMBER.yml
-          git commit -m "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
+          git add ".github/workflows/qr-workflow-${{ env.PR_NUMBER }}.yml"
+          git commit -m "Add qr-workflow-${{ env.PR_NUMBER }}.yml for PR #${{ env.PR_NUMBER }}"
           git push origin qr-code-workflows
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Trigger the new workflow
         run: |
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          WORKFLOW_FILE=".github/workflows/qr-workflow-$PR_NUMBER.yml"
+          WORKFLOW_FILE=".github/workflows/qr-workflow-${{ env.PR_NUMBER }}.yml"
           gh workflow run $WORKFLOW_FILE --ref qr-code-workflows
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
