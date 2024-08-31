@@ -17,19 +17,19 @@ def start_expo_and_get_url():
         if output == '' and process.poll() is not None:
             break
         if output:
-            print(output.strip())  # Affiche la sortie pour le débogage
+            print(output.strip(), flush=True)  # Affiche la sortie pour le débogage en temps réel
             # Cherche l'URL avec le regex
             match = re.search(r'URL:\s+(exp://[\w.-]+)', output)
             if match:
                 expo_url = match.group(1)
-                print(f"Expo URL found: {expo_url}")
+                print(f"Expo URL found: {expo_url}", flush=True)
                 # Définir la sortie du workflow
                 with open(os.environ['GITHUB_ENV'], 'a') as env_file:
                     env_file.write(f"EXPO_URL={expo_url}\n")
                 return expo_url
 
     # Si le processus se termine sans trouver l'URL
-    print("Expo URL not found.")
+    print("Expo URL not found.", flush=True)
     return None
 
 if __name__ == "__main__":
