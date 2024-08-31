@@ -1,10 +1,7 @@
 name: Say Hello
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_call:
 
 jobs:
   say-hello:

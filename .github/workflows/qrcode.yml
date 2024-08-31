@@ -9,21 +9,11 @@ jobs:
   create-qr-workflow:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
+    permissions: write-all
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run test1.yml workflow
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'test1.yml',
-              ref: context.sha
-            });
+      - name: Run build workflow
+        uses: ./.github/workflows/test1.yml
