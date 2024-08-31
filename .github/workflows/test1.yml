@@ -42,28 +42,12 @@ jobs:
         pip install subprocess.run
 
     - name: Run Python script to start Expo server
-      run: python run_expo.py &
+      run: python run_expo.py
       env:
         CI: false
         EXPO_DEBUG: true
 
-  check-url:
-    runs-on: ubuntu-latest
-    needs: generate-url
-    
-    steps:
-    - name: Checkout PR
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        ref: refs/pull/${{ inputs.pr_number }}/merge
-
-    - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-
-    - name: Check for Expo URL
-      run: python check_expo_url.py
-
-
+    - name: Show Expo URL
+      if: success()
+      run: |
+        echo "Expo URL: ${{ env.EXPO_URL }}"
