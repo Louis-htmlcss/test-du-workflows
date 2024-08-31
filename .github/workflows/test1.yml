@@ -38,16 +38,15 @@ jobs:
     - name: Install dependencies
       run: |
         npm ci
-        npm install -g expo-cli
-        npm install -g qrcode-terminal
+        npm install -g @expo/ngrok@^4.1.0
 
-    - name: Start Expo server and generate QR code
+    - name: Start Expo server with ngrok tunnel
       run: |
         npx expo start --tunnel &
         sleep 30  # Attendre que le serveur démarre
         EXPO_URL=$(npx expo url --tunnel)
         echo "Expo URL: $EXPO_URL"
-        qrcode-terminal "$EXPO_URL"
+        echo $EXPO_URL | npx qrcode-terminal
       env:
         CI: true
 
