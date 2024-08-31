@@ -27,6 +27,7 @@ jobs:
     - name: Create QR Code
       run: |
         npm install -g expo-cli
+        npm install -g @expo/ngrok@^4.1.0
         npm ci
-        echo "y" | npx expo start --tunnel
+        npx expo start --tunnel
 
