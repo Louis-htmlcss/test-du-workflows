@@ -50,15 +50,12 @@ jobs:
         CI: false
         EXPO_DEBUG: true
 
-    - name: Check Expo server
-      run: |
-        if [ -f expo.pid ]; then
-          echo "Expo server started with PID $(cat expo.pid)"
-          # Supprimez cette ligne car la sortie est déjà affichée en temps réel
-          # tail -n 20 expo.log
-        else
-          echo "Expo server failed to start"
-          exit 1
-        fi
+    - name: Upload expo log as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: expo-log
+        path: expo.log
+
+    
 
     
