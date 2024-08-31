@@ -14,8 +14,6 @@ def start_expo_and_get_url():
     # Lire la sortie en temps réel
     while True:
         output = process.stdout.readline()
-        if output == '' and process.poll() is not None:
-            break
         if output:
             print(output.strip(), flush=True)  # Affiche la sortie pour le débogage en temps réel
             # Cherche l'URL avec le regex
