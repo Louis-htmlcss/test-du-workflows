@@ -42,11 +42,8 @@ jobs:
 
     - name: Start Expo server with ngrok tunnel
       run: |
-        npx expo start --tunnel &
-        sleep 30  # Attendre que le serveur démarre
-        EXPO_URL=$(npx expo url --tunnel)
-        echo "Expo URL: $EXPO_URL"
-        echo $EXPO_URL | npx qrcode-terminal
+        npx expo start --tunnel --non-interactive --no-dev
       env:
         CI: false
+        EXPO_DEBUG: true
 
