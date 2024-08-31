@@ -6,6 +6,10 @@ on:
         required: true
         type: number
   workflow_dispatch:
+    inputs:
+      pr_number:
+        required: true
+        type: number
 jobs:
   generate-url:
     runs-on: ubuntu-latest
