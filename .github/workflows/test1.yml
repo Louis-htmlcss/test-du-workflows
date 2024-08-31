@@ -42,13 +42,9 @@ jobs:
         pip install subprocess.run
 
     - name: Run Python script to start Expo server
-      run: python run_expo.py 2>&1 | tee expo_output.log
+      run: nohup npx expo start --no-dev --clear --tunnel
       env:
         CI: false
         EXPO_DEBUG: true
 
-    - name: Show Expo URL
-      if: success()
-      run: |
-        echo "Expo URL: ${{ env.EXPO_URL }}"
-        cat expo_output.log
+    
