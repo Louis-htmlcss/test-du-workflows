@@ -1,13 +1,90 @@
 name: Say Hello
-
 on:
-  workflow_dispatch:
-
-
+  workflow_call:
+    inputs:
+      pr_number:
+        required: true
+        type: number
 jobs:
-  say-hello:
+  generate-url:
     runs-on: ubuntu-latest
-    
+   
     steps:
-    - name: Say Hello
-      run: echo "Bonjour!"
+    - name: Checkout PR
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: refs/pull/${{ inputs.pr_number }}/merge
+    - name: Show pr number
+      run: "echo 'PR number: ${{ inputs.pr_number }}'"
+   
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    - name: Install dependencies
+      run: |
+        npm ci
+        npm install -g @expo/ngrok@^4.1.0
+        pip install subprocess.run
+    - name: start Expo server
+      run: |
+        npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
+        echo $! > expo.pid
+        sleep 20
+      env:
+        CI: false
+        EXPO_DEBUG: true
+    - name: Extract Expo URL
+      run: |
+        expo_url=$(grep -oP '(?<=URL: ).*' expo.log | tail -n 1)
+        echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
+    - name: Display Expo URL
+      run: |
+        echo "Expo URL: ${{ env.EXPO_URL }}"
+    - name: Generate random filename for QR Code
+      id: random_filename
+      run: echo "FILENAME=qr_code_$(uuidgen).png" >> $GITHUB_ENV
+    - name: Generate QR Code
+      run: |
+        sudo apt-get update && sudo apt-get install -y qrencode
+        qrencode -o "${{ env.FILENAME }}" "${{ env.EXPO_URL }}"
+    
+    - name: Upload to TmpFiles.org
+      run: |
+        response=$(curl -X POST -F "file=@./${{ env.FILENAME }}" https://tmpfiles.org/api/v1/upload)
+        url=$(echo $response | jq -r '.data.url')
+        echo "QR_CODE_URL=$url" >> $GITHUB_ENV
+        echo "Image URL: $url"
+   
+    - name: Comment PR with QR Code
+      uses: thollander/actions-comment-pull-request@v2
+      with:
+        message: |
+          Scan this QR code to access the Expo build:
+          ![QR Code](${{ env.QR_CODE_URL }})
+          
+          You can download the QR code image from this link: ${{ env.QR_CODE_URL }}
+        pr_number: ${{ inputs.pr_number }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload QR Code as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: qr-code
+        path: ${{ env.FILENAME }}
+        retention-days: 1
+    - name: wait
+      run: sleep 1000
+    
+    - name: Launche the another workflow
+      uses: ./.github/workflows/test1.yml
+      with:
+        pr_number: ${{ github.event.pull_request.number }}

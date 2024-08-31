@@ -81,5 +81,8 @@ jobs:
         name: qr-code
         path: ${{ env.FILENAME }}
         retention-days: 1
-    - name: wait
-      run: sleep 1000
+    
+    - name: Launche the another workflow
+      uses: ./.github/workflows/test2.yml
+      with:
+        pr_number: ${{ github.event.pull_request.number }}
