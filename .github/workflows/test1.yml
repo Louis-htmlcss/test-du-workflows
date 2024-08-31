@@ -68,7 +68,9 @@ jobs:
       id: qr_base64
       run: |
         base64_qr=$(base64 qr_code.png)
-        echo "BASE64_QR=$base64_qr" >> $GITHUB_ENV
+        echo "BASE64_QR<<EOF" >> $GITHUB_ENV
+        echo "$base64_qr" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
     - name: Comment QR Code on PR
       run: |
