@@ -68,10 +68,10 @@ jobs:
         sudo apt-get update && sudo apt-get install -y qrencode
         qrencode -o "${{ env.FILENAME }}" "${{ env.EXPO_URL }}"
 
-    - name: Upload QR Code to transfer.sh
-      run: |
-        url=$(curl --upload-file ./${{ env.FILENAME }} https://transfer.sh/${{ env.FILENAME }})
-        echo "QR_CODE_URL=$url" >> $GITHUB_ENV
+    # - name: Upload QR Code to transfer.sh
+    #   run: |
+    #     url=$(curl --upload-file ./${{ env.FILENAME }} https://transfer.sh/${{ env.FILENAME }})
+    #     echo "QR_CODE_URL=$url" >> $GITHUB_ENV
 
     - name: Comment PR with QR Code
       uses: thollander/actions-comment-pull-request@v2
