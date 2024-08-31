@@ -70,7 +70,7 @@ jobs:
 
     - name: Upload QR Code to transfer.sh
       run: |
-        url=$(curl --upload-file ./${{ env.FILENAME }} https://transfer.sh/${{ env.FILENAME }})
+        url=$(curl --upload-file ./${{ env.FILENAME }} https://transfer.sh/${{ env.FILENAME }}
         echo "QR_CODE_URL=$url" >> $GITHUB_ENV
 
     - name: Comment PR with QR Code
