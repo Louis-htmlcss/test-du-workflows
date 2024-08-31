@@ -1,4 +1,4 @@
-name: Say Hello
+name: Generate and Send QR Code
 
 on:
   workflow_call:
@@ -8,80 +8,85 @@ on:
         type: number
 
 jobs:
-  generate-url:
+  generate-and-send-qr:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout PR
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        ref: refs/pull/${{ inputs.pr_number }}/merge
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: refs/pull/${{ inputs.pr_number }}/merge
 
-    - name: Show PR number
-      run: "echo 'PR number: ${{ inputs.pr_number }}'"
-    
-    - name: Setup Java
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
-        distribution: 'adopt'
+      - name: Show PR number
+        run: "echo 'PR number: ${{ inputs.pr_number }}'"
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'adopt'
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
 
-    - name: Install dependencies
-      run: |
-        npm ci
-        npm install -g @expo/ngrok@^4.1.0
-        pip install subprocess.run
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    - name: Start Expo server
-      run: |
-        npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
-        echo $! > expo.pid
-        sleep 30  # Attendre que le serveur démarre
-      env:
-        CI: false
-        EXPO_DEBUG: true
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g @expo/ngrok@^4.1.0
+          pip install subprocess.run
 
-    - name: Extract Expo URL
-      run: |
-        expo_url=$(grep -oP '(?<=URL: ).*' expo.log | tail -n 1)
-        echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
+      - name: Start Expo server
+        run: |
+          npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
+          echo $! > expo.pid
+          sleep 30 # Attendre que le serveur démarre
+        env:
+          CI: false
+          EXPO_DEBUG: true
 
-    - name: Display Expo URL
-      run: |
-        echo "Expo URL: ${{ env.EXPO_URL }}"
+      - name: Extract Expo URL
+        run: |
+          expo_url=$(grep -oP '(?<=URL: ).*' expo.log | tail -n 1)
+          echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
 
-    - name: Generate QR Code
-      run: |
-        sudo apt-get update && sudo apt-get install -y qrencode
-        qrencode -o qr_code.png "${{ env.EXPO_URL }}"
+      - name: Display Expo URL
+        run: |
+          echo "Expo URL: ${{ env.EXPO_URL }}"
 
-    - name: Encode QR Code in Base64
-      id: qr_base64
-      run: |
-        base64_qr=$(base64 qr_code.png)
-        echo "BASE64_QR<<EOF" >> $GITHUB_ENV
-        echo "$base64_qr" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+      - name: Generate QR Code
+        run: |
+          sudo apt-get update && sudo apt-get install -y qrencode
+          qrencode -o qr_code.png "${{ env.EXPO_URL }}"
 
-    - name: Comment QR Code on PR
-      run: |
-        GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-        PR_NUMBER=${{ inputs.pr_number }}
-        REPO_NAME=${{ github.repository }}
-        BASE64_QR=${{ env.BASE64_QR }}
+      - name: Upload QR Code to PR
+        uses: actions/upload-artifact@v3
+        with:
+          name: qr-code
+          path: qr_code.png
 
-        COMMENT_BODY="QR Code generated for PR #${PR_NUMBER}:\n\n![QR Code](data:image/png;base64,${BASE64_QR})"
+      - name: Comment on PR with QR Code
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const prNumber = ${{ inputs.pr_number }};
+            
+            const qrCodeBase64 = fs.readFileSync('qr_code.png', { encoding: 'base64' });
+            
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: prNumber,
+              body: `## QR Code for Expo App\n\n![QR Code](data:image/png;base64,${qrCodeBase64})`
+            });
 
-        curl -s -H "Authorization: token $GH_TOKEN" -X POST -d "{\"body\": \"$COMMENT_BODY\"}" "https://api.github.com/repos/${REPO_NAME}/issues/${PR_NUMBER}/comments"
       
-    - name: wait
-      run: sleep 1000
+      - name: wait
+        run: sleep 1000
