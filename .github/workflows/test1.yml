@@ -81,5 +81,5 @@ jobs:
         name: qr-code
         path: ${{ env.FILENAME }}
         retention-days: 1
-    #- name: wait
-    #  run: sleep 1000
+    - name: wait
+      run: sleep 1000
