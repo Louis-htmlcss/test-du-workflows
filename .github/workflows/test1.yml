@@ -59,18 +59,26 @@ jobs:
       run: |
         echo "Expo URL: ${{ env.EXPO_URL }}"
 
-    - name: Send URL to website and get short link
-      run: |
-        response=$(curl -X POST -H "Content-Type: application/json" -d '{"url":"${{ env.EXPO_URL }}"}' https://example.com/api/shorten)
-        short_url=$(echo $response | jq -r '.short_url')
-        echo "SHORT_URL=$short_url" >> $GITHUB_ENV
+    - name: Generate random filename for QR Code
+      id: random_filename
+      run: echo "FILENAME=qr_code_$(uuidgen).png" >> $GITHUB_ENV
 
-    - name: Comment PR with short link
+    - name: Generate QR Code
+      run: |
+        sudo apt-get update && sudo apt-get install -y qrencode
+        qrencode -o "${{ env.FILENAME }}" "${{ env.EXPO_URL }}"
+
+    - name: Upload QR Code to transfer.sh
+      run: |
+        url=$(curl --upload-file ./${{ env.FILENAME }} https://transfer.sh/${{ env.FILENAME }})
+        echo "QR_CODE_URL=$url" >> $GITHUB_ENV
+
+    - name: Comment PR with QR Code
       uses: thollander/actions-comment-pull-request@v2
       with:
         message: |
-          Access the Expo build using this link:
-          ${{ env.SHORT_URL }}
+          Scan this QR code to access the Expo build:
+          ![QR Code](${{ env.QR_CODE_URL }})
         pr_number: ${{ inputs.pr_number }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
