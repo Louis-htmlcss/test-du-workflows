@@ -53,7 +53,7 @@ jobs:
         expo_pid=$!
         
         # Attendre et chercher l'URL
-        timeout=180  # Augmenté à 180 secondes pour donner plus de temps
+        timeout=40 # Augmenté à 180 secondes pour donner plus de temps
         start_time=$(date +%s)
         while true; do
           if grep -q "exp://" expo_output.log; then
