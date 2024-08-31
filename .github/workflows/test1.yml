@@ -50,6 +50,14 @@ jobs:
         CI: false
         EXPO_DEBUG: true
 
+    - name: Extract Expo URL
+      run: |
+        expo_url=$(grep -oP '(?<=URL: ).*' expo.log | tail -n 1)
+        echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
+
+    - name: Display Expo URL
+      run: echo "Expo URL: ${{ env.EXPO_URL }}"
+
     - name: Upload expo log as artifact
       uses: actions/upload-artifact@v3
       with:
