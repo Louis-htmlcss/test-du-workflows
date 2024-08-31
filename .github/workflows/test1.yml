@@ -38,6 +38,7 @@ jobs:
       run: |
         npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
         echo $! > expo.pid
+        sleep 20
       env:
         CI: false
         EXPO_DEBUG: true
@@ -45,7 +46,6 @@ jobs:
       run: |
         expo_url=$(grep -oP '(?<=URL: ).*' expo.log | tail -n 1)
         echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
-        sleep 20
     - name: Display Expo URL
       run: |
         echo "Expo URL: ${{ env.EXPO_URL }}"
