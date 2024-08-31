@@ -64,12 +64,20 @@ jobs:
         sudo apt-get update && sudo apt-get install -y qrencode
         qrencode -o qr_code.png "${{ env.EXPO_URL }}"
 
-    - name: Upload QR Code
-      uses: actions/upload-artifact@v3
+    - name: Comment PR with QR Code
+      uses: actions/github-script@v6
       with:
-        name: expo-qr-code
-        path: qr_code.png
-    
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const fs = require('fs');
+          const qrCode = fs.readFileSync('qr_code.png', {encoding: 'base64'});
+          github.rest.issues.createComment({
+            issue_number: ${{ inputs.pr_number }},
+            owner: context.repo.owner,
+            repo: context.repo.name,
+            body: `## Expo QR Code\n\n![QR Code](data:image/png;base64,${qrCode})\n\nScan this QR code to open the Expo app.`
+          });
+
     - name: wait
       run: sleep 1000
 
