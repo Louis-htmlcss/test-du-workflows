@@ -48,5 +48,5 @@ jobs:
         echo "Expo URL: $EXPO_URL"
         echo $EXPO_URL | npx qrcode-terminal
       env:
-        CI: true
+        CI: false
 
