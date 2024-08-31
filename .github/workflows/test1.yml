@@ -18,18 +18,8 @@ jobs:
         fetch-depth: 0
         ref: refs/pull/${{ inputs.pr_number }}/merge
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y openjdk-11-jdk wget unzip
-        wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -O android-sdk.zip
-        unzip android-sdk.zip -d android-sdk
-        mkdir -p $HOME/.android
-        touch $HOME/.android/repositories.cfg
-        yes | android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=${HOME}/android-sdk "platform-tools" "platforms;android-30"
-        echo "export ANDROID_SDK_ROOT=${HOME}/android-sdk" >> $GITHUB_ENV
-        echo "export PATH=${HOME}/android-sdk/platform-tools:${PATH}" >> $GITHUB_ENV
-        echo "export PATH=${HOME}/android-sdk/cmdline-tools/bin:${PATH}" >> $GITHUB_ENV
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
     - name: Verify adb installation
       run: adb version
