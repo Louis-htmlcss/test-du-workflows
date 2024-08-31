@@ -45,7 +45,7 @@ jobs:
       run: |
         npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
         echo $! > expo.pid
-        sleep 60  # Attendre que le serveur démarre
+        sleep 30  # Attendre que le serveur démarre
       env:
         CI: false
         EXPO_DEBUG: true
@@ -59,12 +59,18 @@ jobs:
       run: |
         echo "Expo URL: ${{ env.EXPO_URL }}"
 
-    - name: Upload expo log as artifact
+    - name: Generate QR Code
+      run: |
+        sudo apt-get update && sudo apt-get install -y qrencode
+        qrencode -o qr_code.png "${{ env.EXPO_URL }}"
+
+    - name: Upload QR Code
       uses: actions/upload-artifact@v3
       with:
-        name: expo-log
-        path: expo.log
+        name: expo-qr-code
+        path: qr_code.png
     
+    - name: wait
+      run: sleep 1000
 
-    
 
