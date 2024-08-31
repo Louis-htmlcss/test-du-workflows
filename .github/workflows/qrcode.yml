@@ -18,3 +18,5 @@ jobs:
   build:
     permissions: write-all
     uses: ./.github/workflows/test1.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
