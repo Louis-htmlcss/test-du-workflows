@@ -81,7 +81,10 @@ jobs:
         name: qr-code
         path: ${{ env.FILENAME }}
         retention-days: 1
-    
+    - name: Checkout main branch
+      uses: actions/checkout@v3
+      with:
+        ref: main
     - name: Launche the another workflow
       uses: ./.github/workflows/test2.yml
       with:
