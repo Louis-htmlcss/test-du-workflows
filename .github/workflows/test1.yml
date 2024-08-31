@@ -8,7 +8,7 @@ on:
         type: number
 
 jobs:
-  say-hello:
+  generate-url:
     runs-on: ubuntu-latest
     
     steps:
@@ -39,54 +39,31 @@ jobs:
       run: |
         npm ci
         npm install -g @expo/ngrok@^4.1.0
+        pip install subprocess.run
 
-    - name: Start Expo server with ngrok tunnel and capture URL
-      env:
-        EXPO_DEBUG: true
-        CI: false
-      run: |
-        # Activer le mode verbose pour npm
-        npm config set loglevel verbose
-        
-        # Démarrer Expo en mode debug et rediriger la sortie vers le fichier et le terminal
-        EXPO_DEBUG=true npx --verbose expo start --tunnel --non-interactive --no-dev 2>&1 | tee expo_output.log &
-        expo_pid=$!
-        
-        # Attendre et chercher l'URL
-        timeout=40 # Augmenté à 180 secondes pour donner plus de temps
-        start_time=$(date +%s)
-        while true; do
-          if grep -q "exp://" expo_output.log; then
-            expo_url=$(grep -o "exp://[^ ]*" expo_output.log | head -n 1)
-            echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
-            echo "Expo URL trouvée : $expo_url"
-            break
-          fi
-          
-          current_time=$(date +%s)
-          if (( current_time - start_time >= timeout )); then
-            echo "Timeout: L'URL Expo n'a pas été trouvée dans les $timeout secondes."
-            break
-          fi
-          
-          # Afficher les dernières lignes du log toutes les 10 secondes
-          tail -n 20 expo_output.log
-          sleep 10
-        done
-        
-        # Garder Expo en cours d'exécution
-        wait $expo_pid
-
-    - name: Afficher l'URL Expo et le log complet
-      run: |
-        if [ -n "${{ env.EXPO_URL }}" ]; then
-          echo "L'URL Expo est : ${{ env.EXPO_URL }}"
-        else
-          echo "L'URL Expo n'a pas été trouvée."
-        fi
-        echo "Contenu complet du fichier de log :"
-        cat expo_output.log
+    - name: Run Python script to start Expo server
+      run: python run_expo.py &
       env:
         CI: false
         EXPO_DEBUG: true
+
+  check-url:
+    runs-on: ubuntu-latest
+    needs: generate-url
+    
+    steps:
+    - name: Checkout PR
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: refs/pull/${{ inputs.pr_number }}/merge
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Check for Expo URL
+      run: python check_expo_url.py
+
 
