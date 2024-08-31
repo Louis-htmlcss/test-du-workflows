@@ -42,11 +42,12 @@ jobs:
 
     - name: Start Expo server with ngrok tunnel and capture URL
       run: |
-        npx expo start --tunnel --non-interactive --no-dev > expo_output.log 2>&1 &
+        # Démarrer Expo et rediriger la sortie vers le fichier et le terminal
+        npx expo start --tunnel --non-interactive --no-dev 2>&1 | tee expo_output.log &
         expo_pid=$!
         
         # Attendre et chercher l'URL
-        timeout=60
+        timeout=120  # Augmenté à 120 secondes pour donner plus de temps
         start_time=$(date +%s)
         while true; do
           if grep -q "exp://" expo_output.log; then
@@ -62,6 +63,8 @@ jobs:
             break
           fi
           
+          # Afficher les dernières lignes du log toutes les 5 secondes
+          tail -n 5 expo_output.log
           sleep 5
         done
         
@@ -74,6 +77,8 @@ jobs:
           echo "L'URL Expo est : ${{ env.EXPO_URL }}"
         else
           echo "L'URL Expo n'a pas été trouvée."
+          echo "Contenu du fichier de log :"
+          cat expo_output.log
         fi
       env:
         CI: false
