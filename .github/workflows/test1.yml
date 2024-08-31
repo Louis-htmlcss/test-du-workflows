@@ -17,10 +17,17 @@ jobs:
       with:
         fetch-depth: 0
         ref: refs/pull/${{ inputs.pr_number }}/merge
-
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
     - name: Verify adb installation
       run: adb version
 
