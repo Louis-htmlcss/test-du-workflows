@@ -1,7 +1,7 @@
 name: Say Hello
 
 on:
-  workflow_call:
+  workflow_call: 
 
 jobs:
   say-hello:

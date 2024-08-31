@@ -15,19 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Call build workflow
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const pr = context.payload.pull_request;
-            if (pr) {
-              await github.rest.actions.createWorkflowDispatch({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                workflow_id: 'test1.yml',
-                ref: pr.head.ref
-              });
-            } else {
-              console.log('This is not a pull request event. Skipping workflow dispatch.');
-            }
+  build:
+    permissions: write-all
+    uses: ./.github/workflows/test1.yml@main
