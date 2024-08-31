@@ -17,4 +17,4 @@ jobs:
 
   build:
     permissions: write-all
-    uses: ./.github/workflows/test1.yml@main
+    uses: ./.github/workflows/test1.yml
