@@ -18,7 +18,7 @@ jobs:
         fetch-depth: 0
         ref: refs/pull/${{ inputs.pr_number }}/merge
 
-    - name: Show pr number
+    - name: Show PR number
       run: "echo 'PR number: ${{ inputs.pr_number }}'"
     
     - name: Setup Java
@@ -41,7 +41,7 @@ jobs:
         npm install -g @expo/ngrok@^4.1.0
         pip install subprocess.run
 
-    - name: start Expo server
+    - name: Start Expo server
       run: |
         npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
         echo $! > expo.pid
@@ -64,22 +64,21 @@ jobs:
         sudo apt-get update && sudo apt-get install -y qrencode
         qrencode -o qr_code.png "${{ env.EXPO_URL }}"
 
-    - name: Upload QR code to PR
-      uses: actions/github-script@v7
+    - name: Upload QR Code to PR
+      uses: actions/upload-artifact@v3
       with:
-        github-token: ${{secrets.GITHUB_TOKEN}}
-        script: |
-          const fs = require('fs');
-          const qrCodeBase64 = fs.readFileSync('qr_code.png', {encoding: 'base64'});
-          
-          await github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `Here's the QR code for the Expo URL:\n\n![QR Code](data:image/png;base64,${qrCodeBase64})`
-          });
+        name: qr_code
+        path: qr_code.png
 
+    - name: Comment QR Code on PR
+      run: |
+        GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+        PR_NUMBER=${{ inputs.pr_number }}
+        REPO_NAME=${{ github.repository }}
+        
+        COMMENT_BODY="QR Code generated for PR #${PR_NUMBER}: ![QR Code](https://github.com/${REPO_NAME}/suites/${{ github.run_id }}/artifacts/qr_code.png)"
+        
+        curl -s -H "Authorization: token $GH_TOKEN" -X POST -d "{\"body\": \"$COMMENT_BODY\"}" "https://api.github.com/repos/${REPO_NAME}/issues/${PR_NUMBER}/comments"
+      
     - name: wait
       run: sleep 1000
-
-
