@@ -5,7 +5,7 @@ import os
 def start_expo_and_get_url():
     # Exécute la commande Expo
     process = subprocess.Popen(
-        ['npx', 'expo', 'start', '--tunnel', '--non-interactive', '--no-dev', '--verbose'],
+        ['npx', 'expo', 'start', '--tunnel', '--non-interactive', '--dev'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True
