@@ -21,6 +21,15 @@ jobs:
     - name: Show pr number
       run: "echo 'PR number: ${{ inputs.pr_number }}'"
     
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+
     - name: Create QR Code
       run: |
         npm install -g expo-cli
