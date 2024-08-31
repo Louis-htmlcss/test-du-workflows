@@ -64,20 +64,21 @@ jobs:
         sudo apt-get update && sudo apt-get install -y qrencode
         qrencode -o qr_code.png "${{ env.EXPO_URL }}"
 
-    - name: Upload QR Code to PR
-      uses: actions/upload-artifact@v3
-      with:
-        name: qr_code
-        path: qr_code.png
+    - name: Encode QR Code in Base64
+      id: qr_base64
+      run: |
+        base64_qr=$(base64 qr_code.png)
+        echo "BASE64_QR=$base64_qr" >> $GITHUB_ENV
 
     - name: Comment QR Code on PR
       run: |
         GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
         PR_NUMBER=${{ inputs.pr_number }}
         REPO_NAME=${{ github.repository }}
-        
-        COMMENT_BODY="QR Code generated for PR #${PR_NUMBER}: ![QR Code](https://github.com/${REPO_NAME}/suites/${{ github.run_id }}/artifacts/qr_code.png)"
-        
+        BASE64_QR=${{ env.BASE64_QR }}
+
+        COMMENT_BODY="QR Code generated for PR #${PR_NUMBER}:\n\n![QR Code](data:image/png;base64,${BASE64_QR})"
+
         curl -s -H "Authorization: token $GH_TOKEN" -X POST -d "{\"body\": \"$COMMENT_BODY\"}" "https://api.github.com/repos/${REPO_NAME}/issues/${PR_NUMBER}/comments"
       
     - name: wait
