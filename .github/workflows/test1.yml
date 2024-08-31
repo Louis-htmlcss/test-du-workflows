@@ -17,20 +17,6 @@ jobs:
       with:
         fetch-depth: 0
         ref: refs/pull/${{ inputs.pr_number }}/merge
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-
-    - name: Setup Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'zulu'
-        java-version: '17'
-
-    - name: Say Hello
-      run: echo "Bonjour!"
 
     - name: Show pr number
       run: "echo 'PR number: ${{ inputs.pr_number }}'"
