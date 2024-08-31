@@ -56,10 +56,12 @@ jobs:
         sudo apt-get update && sudo apt-get install -y qrencode
         qrencode -o "${{ env.FILENAME }}" "${{ env.EXPO_URL }}"
     
-    - name: Upload QR Code to transfer.sh
+    - name: Upload to TmpFiles.org
       run: |
-        QR_CODE_URL=$(curl --upload-file ./${{ env.FILENAME }} https://transfer.sh/${{ env.FILENAME }})
-        echo "QR_CODE_URL=$QR_CODE_URL" >> $GITHUB_ENV
+        response=$(curl -X POST -F "file=@./${{ env.FILENAME }}" https://tmpfiles.org/api/v1/upload)
+        url=$(echo $response | jq -r '.data.url')
+        echo "QR_CODE_URL=$url" >> $GITHUB_ENV
+        echo "Image URL: $url"
    
     - name: Comment PR with QR Code
       uses: thollander/actions-comment-pull-request@v2
