@@ -41,10 +41,23 @@ jobs:
         npm install -g @expo/ngrok@^4.1.0
         pip install subprocess.run
 
-    - name: Run Python script to start Expo server
-      run: nohup npx expo start --no-dev --clear --tunnel
+    - name: start Expo server
+      run: |
+        nohup npx expo start --no-dev --clear --tunnel > expo.log 2>&1 &
+        echo $! > expo.pid
+        sleep 30  # Attendre que le serveur démarre
       env:
         CI: false
         EXPO_DEBUG: true
+
+    - name: Check Expo server
+      run: |
+        if [ -f expo.pid ]; then
+          echo "Expo server started with PID $(cat expo.pid)"
+          tail -n 20 expo.log
+        else
+          echo "Expo server failed to start"
+          exit 1
+        fi
 
     
