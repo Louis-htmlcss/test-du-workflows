@@ -29,6 +29,10 @@ jobs:
         yes | android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=${HOME}/android-sdk "platform-tools" "platforms;android-30"
         echo "export ANDROID_SDK_ROOT=${HOME}/android-sdk" >> $GITHUB_ENV
         echo "export PATH=${HOME}/android-sdk/platform-tools:${PATH}" >> $GITHUB_ENV
+        echo "export PATH=${HOME}/android-sdk/cmdline-tools/bin:${PATH}" >> $GITHUB_ENV
+
+    - name: Verify adb installation
+      run: adb version
 
     - name: Say Hello
       run: echo "Bonjour!"
