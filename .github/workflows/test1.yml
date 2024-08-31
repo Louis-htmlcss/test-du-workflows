@@ -29,5 +29,5 @@ jobs:
         npm install -g expo-cli
         npm install -g @expo/ngrok@^4.1.0
         npm ci
-        npx expo start --tunnel
+        npx expo start --tunnel --no-dev-client
 
