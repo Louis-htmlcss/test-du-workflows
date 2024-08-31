@@ -20,9 +20,14 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'test1.yml',
-              ref: context.ref
-            })
+            const pr = context.payload.pull_request;
+            if (pr) {
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'test1.yml',
+                ref: pr.head.ref
+              });
+            } else {
+              console.log('This is not a pull request event. Skipping workflow dispatch.');
+            }
