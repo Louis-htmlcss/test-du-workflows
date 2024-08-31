@@ -6,15 +6,6 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  create-qr-workflow:
-    runs-on: ubuntu-latest
-
-    permissions: write-all
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
   build:
     permissions: write-all
     uses: ./.github/workflows/test1.yml
