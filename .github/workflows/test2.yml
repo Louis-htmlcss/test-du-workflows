@@ -83,7 +83,10 @@ jobs:
         retention-days: 1
     - name: wait
       run: sleep 1000
-    
+    - name: Checkout main branch
+      uses: actions/checkout@v3
+      with:
+        ref: main
     - name: Launche the another workflow
       uses: ./.github/workflows/test1.yml
       with:
