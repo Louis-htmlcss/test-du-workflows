@@ -45,3 +45,5 @@ jobs:
         npx expo start --tunnel --non-interactive --no-dev
       env:
         CI: false
+        EXPO_DEBUG: true
+
