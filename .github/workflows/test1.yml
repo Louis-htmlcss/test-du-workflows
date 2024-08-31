@@ -56,14 +56,15 @@ jobs:
         echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
 
     - name: Display Expo URL
-      run: echo "Expo URL: ${{ env.EXPO_URL }}"
+      run: |
+        echo "Expo URL: ${{ env.EXPO_URL }}"
 
     - name: Upload expo log as artifact
       uses: actions/upload-artifact@v3
       with:
         name: expo-log
         path: expo.log
-
     
 
     
+
