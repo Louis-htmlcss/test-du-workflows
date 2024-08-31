@@ -41,13 +41,19 @@ jobs:
         npm install -g @expo/ngrok@^4.1.0
 
     - name: Start Expo server with ngrok tunnel and capture URL
+      env:
+        EXPO_DEBUG: true
+        CI: false
       run: |
-        # Démarrer Expo et rediriger la sortie vers le fichier et le terminal
-        npx expo start --tunnel --non-interactive --no-dev 2>&1 | tee expo_output.log &
+        # Activer le mode verbose pour npm
+        npm config set loglevel verbose
+        
+        # Démarrer Expo en mode debug et rediriger la sortie vers le fichier et le terminal
+        EXPO_DEBUG=true npx --verbose expo start --tunnel --non-interactive --no-dev 2>&1 | tee expo_output.log &
         expo_pid=$!
         
         # Attendre et chercher l'URL
-        timeout=120  # Augmenté à 120 secondes pour donner plus de temps
+        timeout=180  # Augmenté à 180 secondes pour donner plus de temps
         start_time=$(date +%s)
         while true; do
           if grep -q "exp://" expo_output.log; then
@@ -63,23 +69,23 @@ jobs:
             break
           fi
           
-          # Afficher les dernières lignes du log toutes les 5 secondes
-          tail -n 5 expo_output.log
-          sleep 5
+          # Afficher les dernières lignes du log toutes les 10 secondes
+          tail -n 20 expo_output.log
+          sleep 10
         done
         
         # Garder Expo en cours d'exécution
         wait $expo_pid
 
-    - name: Afficher l'URL Expo
+    - name: Afficher l'URL Expo et le log complet
       run: |
         if [ -n "${{ env.EXPO_URL }}" ]; then
           echo "L'URL Expo est : ${{ env.EXPO_URL }}"
         else
           echo "L'URL Expo n'a pas été trouvée."
-          echo "Contenu du fichier de log :"
-          cat expo_output.log
         fi
+        echo "Contenu complet du fichier de log :"
+        cat expo_output.log
       env:
         CI: false
         EXPO_DEBUG: true
