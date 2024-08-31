@@ -30,10 +30,24 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v2
 
-    - name: Create QR Code
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
       run: |
-        npm install -g expo-cli
-        npm install -g @expo/ngrok@^4.1.0
         npm ci
-        npx expo start --tunnel
+        npm install -g expo-cli
+        npm install -g qrcode-terminal
+
+    - name: Start Expo server and generate QR code
+      run: |
+        npx expo start --tunnel &
+        sleep 30  # Attendre que le serveur démarre
+        EXPO_URL=$(npx expo url --tunnel)
+        echo "Expo URL: $EXPO_URL"
+        qrcode-terminal "$EXPO_URL"
+      env:
+        CI: true
 
