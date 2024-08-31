@@ -82,5 +82,12 @@ jobs:
         pr_number: ${{ inputs.pr_number }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: wait
-      run: sleep 1000
+    - name: Upload QR Code as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: qr-code
+        path: ${{ env.FILENAME }}
+        retention-days: 1
+
+    #- name: wait
+    #  run: sleep 1000
