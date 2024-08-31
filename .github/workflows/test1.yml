@@ -40,10 +40,28 @@ jobs:
         npm ci
         npm install -g @expo/ngrok@^4.1.0
 
-    - name: Start Expo server with ngrok tunnel
+    - name: Start Expo server with ngrok tunnel and capture URL
       run: |
-        npx expo start --tunnel --no-dev
+        npx expo start --tunnel --non-interactive --no-dev > >(tee expo_output.log) 2>&1 &
+        expo_pid=$!
+        timeout=60
+        counter=0
+        while [ $counter -lt $timeout ]; do
+          if EXPO_URL=$(grep -oP 'expo:start:server:urlCreator URL: \K\S+' expo_output.log | head -n 1); then
+            echo "EXPO_URL=$EXPO_URL" >> $GITHUB_ENV
+            echo "Expo URL found: $EXPO_URL"
+            break
+          fi
+          sleep 1
+          ((counter++))
+        done
+        if [ $counter -eq $timeout ]; then
+          echo "Timeout: Expo URL not found within ${timeout} seconds"
+          exit 1
+        fi
       env:
         CI: false
-        #EXPO_DEBUG: true
-
+        EXPO_DEBUG: true
+    - name: Display Expo URL
+      run: |
+        echo "Expo URL: ${{ env.EXPO_URL }}"
