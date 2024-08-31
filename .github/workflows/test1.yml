@@ -43,9 +43,9 @@ jobs:
 
     - name: start Expo server
       run: |
-        nohup npx expo start --no-dev --clear --tunnel > expo.log 2>&1 &
+        npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
         echo $! > expo.pid
-        sleep 30  # Attendre que le serveur démarre
+        sleep 60  # Attendre que le serveur démarre
       env:
         CI: false
         EXPO_DEBUG: true
@@ -54,7 +54,8 @@ jobs:
       run: |
         if [ -f expo.pid ]; then
           echo "Expo server started with PID $(cat expo.pid)"
-          tail -n 20 expo.log
+          # Supprimez cette ligne car la sortie est déjà affichée en temps réel
+          # tail -n 20 expo.log
         else
           echo "Expo server failed to start"
           exit 1
