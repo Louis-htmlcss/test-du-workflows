@@ -16,31 +16,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-      
-      - name: Copy and rename file to .github/workflows directory
-        run: |
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          cp qr-workflow-template.txt ".github/workflows/qr-workflow-$PR_NUMBER.yml"
-      
-      - name: Commit and push the new workflow file
-        run: |
-          git fetch origin main
-          git checkout main
-          git pull origin main
-          git add .github/workflows/
-          git commit -m "Add qr-workflow-$PR_NUMBER.yml for PR #$PR_NUMBER"
-          git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-
-      - name: Trigger the new workflow
-        run: |
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          WORKFLOW_FILE="qr-workflow-$PR_NUMBER.yml"
-          gh workflow run $WORKFLOW_FILE
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+      - name: Run test1.yml workflow
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'test1.yml',
+              ref: context.sha
+            });
