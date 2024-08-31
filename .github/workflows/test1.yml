@@ -42,8 +42,8 @@ jobs:
 
     - name: Start Expo server with ngrok tunnel
       run: |
-        npx expo start --tunnel --non-interactive --no-dev
+        npx expo start --tunnel --no-dev
       env:
         CI: false
-        EXPO_DEBUG: true
+        #EXPO_DEBUG: true
 
