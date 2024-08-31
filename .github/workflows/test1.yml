@@ -42,26 +42,40 @@ jobs:
 
     - name: Start Expo server with ngrok tunnel and capture URL
       run: |
-        npx expo start --tunnel --non-interactive --no-dev > >(tee expo_output.log) 2>&1 &
+        npx expo start --tunnel --non-interactive --no-dev > expo_output.log 2>&1 &
         expo_pid=$!
+        
+        # Attendre et chercher l'URL
         timeout=60
-        counter=0
-        while [ $counter -lt $timeout ]; do
-          if EXPO_URL=$(grep -oP 'expo:start:server:urlCreator URL: \K\S+' expo_output.log | head -n 1); then
-            echo "EXPO_URL=$EXPO_URL" >> $GITHUB_ENV
-            echo "Expo URL found: $EXPO_URL"
+        start_time=$(date +%s)
+        while true; do
+          if grep -q "exp://" expo_output.log; then
+            expo_url=$(grep -o "exp://[^ ]*" expo_output.log | head -n 1)
+            echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
+            echo "Expo URL trouvée : $expo_url"
             break
           fi
-          sleep 1
-          ((counter++))
+          
+          current_time=$(date +%s)
+          if (( current_time - start_time >= timeout )); then
+            echo "Timeout: L'URL Expo n'a pas été trouvée dans les $timeout secondes."
+            break
+          fi
+          
+          sleep 5
         done
-        if [ $counter -eq $timeout ]; then
-          echo "Timeout: Expo URL not found within ${timeout} seconds"
-          exit 1
+        
+        # Garder Expo en cours d'exécution
+        wait $expo_pid
+
+    - name: Afficher l'URL Expo
+      run: |
+        if [ -n "${{ env.EXPO_URL }}" ]; then
+          echo "L'URL Expo est : ${{ env.EXPO_URL }}"
+        else
+          echo "L'URL Expo n'a pas été trouvée."
         fi
       env:
         CI: false
         EXPO_DEBUG: true
-    - name: Display Expo URL
-      run: |
-        echo "Expo URL: ${{ env.EXPO_URL }}"
+
