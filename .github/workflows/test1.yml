@@ -50,6 +50,10 @@ jobs:
     - name: Extract Expo URL
       run: |
         expo_url=$(grep -oP '(?<=URL: ).*' expo.log | tail -n 1)
+        if [ -z "$expo_url" ]; then
+          echo "Failed to extract Expo URL"
+          exit 1
+        fi
         echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
     - name: Display Expo URL
       run: |
