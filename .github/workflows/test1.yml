@@ -84,6 +84,31 @@ jobs:
         pr_number: ${{ inputs.pr_number }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Delete previous comment
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const comments = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: ${{ inputs.pr_number }}
+          });
+          const botComment = comments.data.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('Scan this QR code to access the Expo build:')
+          );
+          if (botComment) {
+            await github.rest.issues.deleteComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id
+            });
+            console.log('Previous QR code comment deleted.');
+          } else {
+            console.log('No previous QR code comment found to delete.');
+          }
+
     - name: Upload QR Code as artifact
       uses: actions/upload-artifact@v3
       with:
