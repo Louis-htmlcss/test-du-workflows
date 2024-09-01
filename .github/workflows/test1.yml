@@ -105,6 +105,6 @@ jobs:
             workflow_id: 'test2.yml',
             ref: 'main',
             inputs: {
-              pr_number: '${{ github.event.pull_request.number }}'
+              pr_number: '${{ inputs.pr_number }}'
             }
           })
