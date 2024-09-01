@@ -73,6 +73,28 @@ jobs:
         echo "QR_CODE_URL=$url" >> $GITHUB_ENV
         echo "Image URL: $url"
    
+    - name: Delete previous comment
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const comments = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: ${{ inputs.pr_number }}
+          });
+          const botComment = comments.data.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('Scan this QR code to access the Expo build:')
+          );
+          if (botComment) {
+            await github.rest.issues.deleteComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id
+            });
+          }
+
     - name: Comment PR with QR Code
       uses: thollander/actions-comment-pull-request@v2
       with:
