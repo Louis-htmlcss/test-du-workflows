@@ -7,7 +7,19 @@ on:
 
 jobs:
   build:
-    permissions: write-all
-    uses: ./.github/workflows/test1.yml
-    with:
-      pr_number: ${{ github.event.pull_request.number }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Launch another workflow
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'test1.yml',
+              ref: 'main',
+              inputs: {
+                pr_number: '${{ github.event.pull_request.number }}'
+              }
+            })

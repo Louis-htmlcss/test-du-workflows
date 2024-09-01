@@ -5,11 +5,6 @@ on:
       pr_number:
         required: true
         type: number
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        required: true
-        type: number
 jobs:
   generate-url:
     runs-on: ubuntu-latest
@@ -86,13 +81,21 @@ jobs:
         name: qr-code
         path: ${{ env.FILENAME }}
         retention-days: 1
-    - name: wait
-      run: sleep 1000
     - name: Checkout main branch
       uses: actions/checkout@v3
       with:
         ref: main
-    - name: Launche the another workflow
-      uses: ./.github/workflows/test1.yml
+    - name: Launch another workflow
+      uses: actions/github-script@v6
       with:
-        pr_number: ${{ github.event.pull_request.number }}
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'test1.yml',
+            ref: 'main',
+            inputs: {
+              pr_number: '${{ github.event.pull_request.number }}'
+            }
+          })
