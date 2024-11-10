@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      actions: write
+      pull-requests: write
     steps:
       - name: Checkout PR
         uses: actions/checkout@v4
@@ -56,7 +56,6 @@ jobs:
         uses: thollander/actions-comment-pull-request@v3
         with:
           file-path: qr_code.png
-          pr-number: 1
       - name: Sleep 1 hour
         run: |
           sleep 3600
