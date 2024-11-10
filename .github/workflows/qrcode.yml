@@ -80,15 +80,6 @@ jobs:
           echo "QR_CODE_URL=$ngrok_url" >> $GITHUB_ENV
           echo "Public QR Code URL: $ngrok_url"
 
-      - name: Comment PR with QR Code URL
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          message: |
-            Scan this QR code to access the Expo build:
-            ![QR Code](${{ env.QR_CODE_URL }})
-            
-            Direct link to QR code: ${{ env.QR_CODE_URL }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Sleep 1 hour
         run: |
