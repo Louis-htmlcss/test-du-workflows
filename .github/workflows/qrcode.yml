@@ -30,8 +30,25 @@ jobs:
         run: |
           npm ci
           npm install -g @expo/ngrok@^4.1.0
-      
-      
+      - name: Start Expo server
+        run: |
+          nohup npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
+          echo $! > expo.pid
+          sleep 20
+        env:
+          CI: faslse
+          EXPO_DEBUG: true
+      - name: Extract Expo URL
+        run: |
+          expo_url=$(grep -oP '(?<=URL: ).*' expo.log | tail -n 1)
+            if [ -z "$expo_url" ]; then
+              echo "Failed to extract Expo URL"
+              exit 1
+            fi
+          echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
+      - name: Display Expo URL
+        run: |
+          echo "Expo URL: ${{ env.EXPO_URL }}"
       - name: Launch another workflow
         uses: actions/github-script@v7
         with:
