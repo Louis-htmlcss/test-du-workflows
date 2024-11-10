@@ -38,17 +38,61 @@ jobs:
           sleep 20
         env:
           EXPO_DEBUG: true
-      - name: Extract Expo URL
+      - name: Extract and Display Expo URL
         run: |
           expo_url=$(grep -oP '(?<=URL: ).*' expo.log | tail -n 1)
-            if [ -z "$expo_url" ]; then
-              echo "Failed to extract Expo URL"
-              exit 1
-            fi
+          if [ -z "$expo_url" ]; then
+            echo "Failed to extract Expo URL"
+            exit 1
+          fi
           echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
-      - name: Display Expo URL
-        run: |
           echo "Expo URL: ${{ env.EXPO_URL }}"
+
+      - name: Generate QR Code
+        run: |
+          sudo apt-get update && sudo apt-get install -y qrencode
+          qrencode -o "qr_code.png" "${{ env.EXPO_URL }}"
+      - name: Create Simple HTTP Server
+        run: |
+          cat > server.sh << 'EOF'
+          while true; do
+            echo -e "HTTP/1.1 200 OK\nContent-Type: image/png\n" | cat - qr_code.png | nc -l -p 5000
+          done
+          EOF
+          
+          chmod +x server.sh
+          nohup ./server.sh > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 5
+
+      - name: Create Public URL with ngrok
+        run: |
+          ngrok http 5000 > ngrok.log 2>&1 &
+          echo $! > ngrok.pid
+          sleep 5
+          
+          # Extract ngrok URL
+          ngrok_url=$(curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*' | grep -o 'http[^"]*' | head -1)
+          if [ -z "$ngrok_url" ]; then
+            echo "Failed to get ngrok URL"
+            exit 1
+          fi
+          echo "QR_CODE_URL=$ngrok_url" >> $GITHUB_ENV
+          echo "Public QR Code URL: $ngrok_url"
+
+      - name: Comment PR with QR Code URL
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            Scan this QR code to access the Expo build:
+            ![QR Code](${{ env.QR_CODE_URL }})
+            
+            Direct link to QR code: ${{ env.QR_CODE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Sleep 1 hour
+        run: |
+          sleep 3600
       - name: Launch another workflow
         uses: actions/github-script@v7
         with:
