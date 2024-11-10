@@ -52,13 +52,10 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y qrencode
           qrencode -o "qr_code.png" "${{ env.EXPO_URL }}"
-      - name: Upload to TmpFiles.org
-        run: |
-          response=$(curl -X POST -F "file=@./qr_code.png" https://tmpfiles.org/api/v1/upload)
-          url=$(echo $response | jq -r '.data.url')
-          echo "QR_CODE_URL=$url" >> $GITHUB_ENV
-          echo "Image URL: $url"
-      
+      - name: PR comment with file
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          file-path: qr_code.png
       - name: Sleep 1 hour
         run: |
           sleep 3600
