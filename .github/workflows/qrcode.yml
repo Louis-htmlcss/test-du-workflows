@@ -35,9 +35,6 @@ jobs:
           nohup npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
           echo $! > expo.pid
           sleep 20
-        env:
-          CI: faslse
-          EXPO_DEBUG: true
       - name: Extract Expo URL
         run: |
           expo_url=$(grep -oP '(?<=URL: ).*' expo.log | tail -n 1)
