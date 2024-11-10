@@ -21,7 +21,8 @@ jobs:
         with:
           java-version: '21'
           distribution: 'zulu'
-      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -35,6 +36,7 @@ jobs:
           nohup npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
           echo $! > expo.pid
           sleep 20
+        
       - name: Extract Expo URL
         run: |
           expo_url=$(grep -oP '(?<=URL: ).*' expo.log | tail -n 1)
