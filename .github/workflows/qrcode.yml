@@ -19,9 +19,6 @@ jobs:
             github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'test1.yml',
+              workflow_id: 'qrcode.yml',
               ref: 'main',
-              inputs: {
-                pr_number: '${{ github.event.pull_request.number }}'
-              }
             })
