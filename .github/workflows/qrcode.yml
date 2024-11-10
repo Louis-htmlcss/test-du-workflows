@@ -52,34 +52,12 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y qrencode
           qrencode -o "qr_code.png" "${{ env.EXPO_URL }}"
-      - name: Create Simple HTTP Server
+      - name: Upload to TmpFiles.org
         run: |
-          cat > server.sh << 'EOF'
-          while true; do
-            echo -e "HTTP/1.1 200 OK\nContent-Type: image/png\n" | cat - qr_code.png | nc -l -p 5000
-          done
-          EOF
-          
-          chmod +x server.sh
-          nohup ./server.sh > server.log 2>&1 &
-          echo $! > server.pid
-          sleep 5
-
-      - name: Create Public URL with ngrok
-        run: |
-          ngrok http 5000 > ngrok.log 2>&1 &
-          echo $! > ngrok.pid
-          sleep 5
-          
-          # Extract ngrok URL
-          ngrok_url=$(curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*' | grep -o 'http[^"]*' | head -1)
-          if [ -z "$ngrok_url" ]; then
-            echo "Failed to get ngrok URL"
-            exit 1
-          fi
-          echo "QR_CODE_URL=$ngrok_url" >> $GITHUB_ENV
-          echo "Public QR Code URL: $ngrok_url"
-
+          response=$(curl -X POST -F "file=@./qr_code.png" https://tmpfiles.org/api/v1/upload)
+          url=$(echo $response | jq -r '.data.url')
+          echo "QR_CODE_URL=$url" >> $GITHUB_ENV
+          echo "Image URL: $url"
       
       - name: Sleep 1 hour
         run: |
