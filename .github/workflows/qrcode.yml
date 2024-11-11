@@ -2,6 +2,11 @@ name: Create QR Code Workflow for PR
 
 on:
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request Number'
+        required: false
+        type: string
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -84,4 +89,7 @@ jobs:
               repo: context.repo.repo,
               workflow_id: 'qrcode.yml',
               ref: '${{ github.event.pull_request.head.ref }}',
+              inputs: {
+                pr_number: '${{ github.event.pull_request.number }}'
+              }
             })
