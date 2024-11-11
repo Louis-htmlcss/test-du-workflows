@@ -50,10 +50,10 @@ jobs:
           echo "Expo URL: ${{ env.EXPO_URL }}"
 
       - name: Generate QR Code
-        uses: snow-actions/qrcode@v1.0.0
-        with:
-          text: ${{ env.EXPO_URL }}
-          path: qr_code_pr${{ github.event.pull_request.number }}.png
+        run: |
+          sudo apt-get update && sudo apt-get install -y qrencode
+          qrencode -o "qr_code_pr${{ github.event.pull_request.number }}.png" "${{ env.EXPO_URL }}"
+          echo "Expo URL: ${{ env.EXPO_URL }}"
       - name: Copy QR Code to GitHub Pages
         run: |
           mkdir -p public
