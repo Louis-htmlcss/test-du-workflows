@@ -107,7 +107,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'qrcode.yml',
-              ref: '${{ github.event.pull_request.head.ref }}',
+              ref: 'main',
               inputs: {
                 pr_number: '${{ env.PR_NUMBER }}'
               }
