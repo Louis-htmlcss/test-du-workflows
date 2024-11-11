@@ -51,9 +51,8 @@ jobs:
 
       - name: Generate QR Code
         run: |
-          echo "Expo URL: ${{ env.EXPO_URL }}"
-          sudo apt-get update && sudo apt-get install -y qrencode
-          qrencode -o "qr_code_pr${{ github.event.pull_request.number }}.png" "${{ env.EXPO_URL }}"
+          npm install -g qrcode-terminal
+          qrcode "${{ env.EXPO_URL }}" > "qr_code_pr${{ github.event.pull_request.number }}.png"
           echo "Expo URL: ${{ env.EXPO_URL }}"
       - name: Copy QR Code to GitHub Pages
         run: |
