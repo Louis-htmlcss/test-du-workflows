@@ -44,11 +44,16 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci
-          npm install -g @expo/ngrok@^4.1.0
 
-      - name: Ajouter ngrok au PATH
+      - name: Installer ngrok
         run: |
-          echo "::add-path::$(npm bin -g)"
+          wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
+          unzip ngrok-stable-linux-amd64.zip
+          sudo mv ngrok /usr/local/bin/
+
+      - name: Vérifier l'installation de ngrok
+        run: |
+          which ngrok || (echo "ngrok n'est pas installé correctement" && exit 1)
 
       - name: Start Expo server
         run: |
