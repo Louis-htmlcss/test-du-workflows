@@ -32,7 +32,6 @@ jobs:
         run: |
           npm ci
           npm install -g @expo/ngrok@^4.1.0
-          npm install -g http-server
       - name: Start Expo server
         run: |
           nohup npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
@@ -54,27 +53,31 @@ jobs:
           sudo apt-get update && sudo apt-get install -y qrencode
           qrencode -o "qr_code_pr${{ github.event.pull_request.number }}.png" "${{ env.EXPO_URL }}"
           echo "Expo URL: ${{ env.EXPO_URL }}"
-      - name: Start HTTP Server and Ngrok
-        run: |
-          mkdir -p public
-          cp qr_code_pr${{ github.event.pull_request.number }}.png public/
-          nohup http-server ./public -p 8080 &
-          echo $! > http-server.pid
-          ngrok_url=$(ngrok http 8080 --log=stdout > ngrok.log 2>&1 & sleep 5 && grep -o 'https://.*\.ngrok-free\.app' ngrok.log | head -n1)
-          echo "NGROK_URL=$ngrok_url" >> $GITHUB_ENV
       - name: Upload QR Code as artifact
         uses: actions/upload-artifact@v3
         with:
           name: qr-code
           path: qr_code_pr${{ github.event.pull_request.number }}.png
+      - name: Copy QR Code to GitHub Pages
+        run: |
+          mkdir -p public
+          cp qr_code_pr${{ github.event.pull_request.number }}.png public/
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+
       - name: PR comment with QR Code link
         uses: thollander/actions-comment-pull-request@v3
         with:
           message: |
             Voici le QR Code pour tester votre application Expo :
-            ![QR Code](${{ env.NGROK_URL }}/qr_code_pr${{ github.event.pull_request.number }}.png)
+            ![QR Code](https://Louis-htmlcss.github.io/test-du-workflows/qr_code_pr${{ github.event.pull_request.number }}.png)
             Et le lien de l'application Expo :
             ${{ env.EXPO_URL }}
+
       - name: Sleep 1 hour
         run: |
           sleep 3600
