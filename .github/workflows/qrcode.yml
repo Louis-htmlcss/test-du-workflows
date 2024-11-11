@@ -2,6 +2,11 @@ name: Create QR Code Workflow for PR
 
 on:
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request Number'
+        required: true
+        type: string
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -49,10 +54,8 @@ jobs:
 
       - name: Echo Pull Request Number
         run: |
-          # Si c'est un workflow_dispatch, on doit trouver le PR number
           if [ -z "${{ github.event.pull_request.number }}" ]; then
-            PR_NUMBER=$(gh pr list --head ${{ github.ref_name }} --json number --jq '.[0].number')
-            echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
+            echo "PR_NUMBER=${{ github.event.inputs.pr_number }}" >> $GITHUB_ENV
           else
             echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
           fi
