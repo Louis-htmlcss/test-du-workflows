@@ -82,14 +82,23 @@ jobs:
       - name: Echo Pull Request Number + URL
         run: |
           echo "Processing Pull Request #${{ env.PR_NUMBER }}"
-          echo "La vraie URL : -> ${{ $NGROK_URL/qr_code_pr${{ github.event.pull_request.number }}.png }}"
-          echo "Ce que contient la variable 'env.QR_URL' -> #${{ env.QR_URL }}"
+          echo "La vraie URL : -> ${NGROK_URL}/qr_code_pr${{ env.PR_NUMBER }}.png"
+          echo "Ce que contient la variable 'env.QR_URL' -> ${{ env.QR_URL }}"
+
+      - name: Set Date and Time Variables
+        run: |
+          CURRENT_DATE=$(date +"%d-%m-%Y")
+          CURRENT_TIME=$(date +"%T")
+          TIMESTAMP=$(date +%s)
+          echo "CURRENT_DATE=$CURRENT_DATE" >> $GITHUB_ENV
+          echo "CURRENT_TIME=$CURRENT_TIME" >> $GITHUB_ENV
+          echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
 
       - name: PR comment with QR Code link
         uses: thollander/actions-comment-pull-request@v3
         with:
           message: |
-            Ce lien/QR Code a été crée/modifié le ${{ date +"%d-%m-%y" }} à ${{ date +"%T" }}
+            Ce lien/QR Code a été crée/modifié le ${{ env.CURRENT_DATE }} à ${{ env.CURRENT_TIME }}
             ---
             | QR Code | Lien Expo Go |
             |--------|--------|
@@ -98,9 +107,9 @@ jobs:
             <details><summary>Details supplémentaires</summary>
             <p>
             - Exécution : ${{ github.run_id }}
-            - Timestamp : ${{ date +%s }}      
+            - Timestamp : ${{ env.TIMESTAMP }}      
             </p>
-            </details> 
+            </details>
           comment-tag: execution
           pr-number: ${{ env.PR_NUMBER }}
 
