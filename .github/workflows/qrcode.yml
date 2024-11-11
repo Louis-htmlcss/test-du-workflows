@@ -62,6 +62,9 @@ jobs:
           
           NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*' | grep -o 'http[^"]*' | head -1)
           echo "QR_URL=$NGROK_URL/qr_code_pr${{ github.event.pull_request.number }}.png" >> $GITHUB_ENV
+      - name: Echo Pull Request Number
+        run: |
+          echo "Processing Pull Request #${{ github.event.pull_request.number }}"
 
       - name: PR comment with QR Code link
         uses: thollander/actions-comment-pull-request@v3
