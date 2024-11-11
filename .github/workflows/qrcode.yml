@@ -105,6 +105,10 @@ jobs:
         with:
           ref: main
 
+      - name: Sleep 5 minutes
+        run: |
+          sleep 300
+
       # - name: Sleep 3 hours and 50 minutes
       #   run: |
       #     sleep 12900
