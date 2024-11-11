@@ -88,7 +88,7 @@ jobs:
             ![QR Code](${{ env.QR_URL }})
             Et le lien de l'application Expo :
             ${{ env.EXPO_URL }}
-            _(execution **${{ github.run_id }}** / attempt **${{ github.run_attempt }}**)_
+            _(execution **${{ github.run_id }}** / time_stamp **$(date -u +'%Y-%m-%d %H:%M:%S UTC')**)_
           comment-tag: execution
           pr-number: ${{ env.PR_NUMBER }}
 
