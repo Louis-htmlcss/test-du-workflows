@@ -47,24 +47,38 @@ jobs:
           fi
           echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
 
+      - name: Get PR Number
+        id: pr
+        run: |
+          if [ ! -z "${{ github.event.pull_request.number }}" ]; then
+            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          else
+            # Si lancé via workflow_dispatch, on cherche la PR associée à la branche
+            PR_NUMBER=$(gh pr list --head ${{ github.ref_name }} --json number -q '.[0].number')
+            echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Generate QR Code
         run: |
           sudo apt-get update && sudo apt-get install -y qrencode
-          qrencode -o "qr_code_pr${{ github.event.pull_request.number }}.png" "${{ env.EXPO_URL }}"
+          qrencode -o "qr_code_pr${{ env.PR_NUMBER }}.png" "${{ env.EXPO_URL }}"
 
       - name: Create and Start HTTP Server
         run: |
           mkdir -p public
-          cp qr_code_pr${{ github.event.pull_request.number }}.png public/
+          cp qr_code_pr${{ env.PR_NUMBER }}.png public/
           cd public
           nohup ngrok http 8000 > ../ngrok.log 2>&1 &
           sleep 5
           
           NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*' | grep -o 'http[^"]*' | head -1)
-          echo "QR_URL=$NGROK_URL/qr_code_pr${{ github.event.pull_request.number }}.png" >> $GITHUB_ENV
+          echo "QR_URL=$NGROK_URL/qr_code_pr${{ env.PR_NUMBER }}.png" >> $GITHUB_ENV
+
       - name: Echo Pull Request Number
         run: |
-          echo "Processing Pull Request #${{ github.event.pull_request.number }}"
+          echo "Processing Pull Request #${{ env.PR_NUMBER }}"
 
       - name: PR comment with QR Code link
         uses: thollander/actions-comment-pull-request@v3
@@ -76,7 +90,7 @@ jobs:
             ${{ env.EXPO_URL }}
             _(execution **${{ github.run_id }}** / attempt **${{ github.run_attempt }}**)_
           comment-tag: execution
-          pr-number: ${{ github.event.pull_request.number }}
+          pr-number: ${{ env.PR_NUMBER }}
 
       - name: Checkout main
         uses: actions/checkout@v4
