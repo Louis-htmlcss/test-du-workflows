@@ -73,8 +73,6 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y qrencode
           qrencode -o "qr_code_pr${{ env.PR_NUMBER }}.png" "${{ env.EXPO_URL }}"
-        env:
-          DEBIAN_FRONTEND: noninteractive  # Accélère l'installation
 
       - name: Serve QR Code via HTTP
         run: |
