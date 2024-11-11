@@ -51,14 +51,32 @@ jobs:
       - name: Generate QR Code
         run: |
           sudo apt-get update && sudo apt-get install -y qrencode
-          qrencode -o "qr_code.png" "${{ env.EXPO_URL }}"
+          qrencode -o "qr_code_pr${{ github.event.pull_request.number }}.png" "${{ env.EXPO_URL }}"
+      
+      - name: Copy QR Code to GitHub Pages
+        run: |
+          mkdir -p public
+          cp qr_code_pr${{ github.event.pull_request.number }}.png public/
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+
+      - name: PR comment with QR Code link
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          message: |
+            Voici le QR Code pour tester votre application Expo :
+            ![QR Code](https://Louis-htmlcss.github.io/test-du-workflows/qr_code_pr${{ github.event.pull_request.number }}.png)
       - name: PR comment with file
         uses: thollander/actions-comment-pull-request@v3
         with:
           message: |
             Voici le QR Code pour tester votre application Expo :
-            ![QR Code](qr_code.png)
-          file-path: qr_code.png
+            ![QR Code](qr_code_pr${{ github.event.pull_request.number }}.png)
+          file-path: qr_code_pr${{ github.event.pull_request.number }}.png
       - name: Sleep 1 hour
         run: |
           sleep 3600
