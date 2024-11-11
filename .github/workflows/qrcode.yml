@@ -36,26 +36,21 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
 
-      - name: Setup Node.js and dependencies
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-      - name: Install dependencies and expo tools
+
+      - name: Install dependencies
         run: |
           npm ci
           npm install -g @expo/ngrok@^4.1.0
-        env:
-          NODE_ENV: production  # Pour une installation optimisée
 
-      - name: Start Expo server with logs
+      - name: Start Expo server
         run: |
-          nohup npx expo start --no-dev --clear --tunnel > expo.log 2>&1 &
-          echo "Expo server started, waiting for it to be ready..."
+          git status
+          nohup npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
           sleep 20
-          if ! grep -q 'Tunnel ready' expo.log; then
-            echo "Expo server did not start correctly. Check expo.log for details."
-            exit 1
-          fi
         env:
           EXPO_DEBUG: true
 
@@ -66,25 +61,27 @@ jobs:
             echo "Failed to extract Expo URL"
             exit 1
           fi
-          echo "Extracted Expo URL: $expo_url"
           echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
 
-      - name: Install qrencode and Generate QR Code
+      - name: Generate QR Code
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y qrencode
+          sudo apt-get update && sudo apt-get install -y qrencode
           qrencode -o "qr_code_pr${{ env.PR_NUMBER }}.png" "${{ env.EXPO_URL }}"
 
-      - name: Serve QR Code via HTTP
+      - name: Create and Start HTTP Server
         run: |
           mkdir -p public
-          mv qr_code_pr${{ env.PR_NUMBER }}.png public/
+          cp qr_code_pr${{ env.PR_NUMBER }}.png public/
           cd public
-          nohup npx http-server -p 8000 > ../http-server.log 2>&1 &
-          sleep 10
-          echo "HTTP server started."
-
+          nohup ngrok http 8000 > ../ngrok.log 2>&1 &
+          sleep 15
+          
           NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*' | grep -o 'http[^"]*' | head -1)
           echo "QR_URL=$NGROK_URL/qr_code_pr${{ github.event.pull_request.number }}.png" >> $GITHUB_ENV
+
+      - name: Echo Pull Request Number
+        run: |
+          echo "Processing Pull Request #${{ env.PR_NUMBER }}"
 
       - name: PR comment with QR Code link
         uses: thollander/actions-comment-pull-request@v3
@@ -129,8 +126,3 @@ jobs:
       # - name: Sleep 10 minutes
       #   run: |
       #     sleep 600
-
-      # - name: Optional Cleanup
-      #   run: |
-      #     echo "Cleaning up temporary files..."
-      #     rm -rf public expo.log ngrok.log
