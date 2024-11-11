@@ -18,10 +18,18 @@ jobs:
       contents: write
       actions: write
     steps:
+      - name: Get PR Number
+        id: pr
+        run: |
+          if [ ! -z "${{ github.event.pull_request.number }}" ]; then
+            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          else
+            echo "PR_NUMBER=${{ inputs.pr_number }}" >> $GITHUB_ENV
+          fi
       - name: Checkout PR
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ env.PR_NUMBER }}/head
           fetch-depth: 0
 
       - name: Setup Android SDK
@@ -52,14 +60,7 @@ jobs:
           fi
           echo "EXPO_URL=$expo_url" >> $GITHUB_ENV
 
-      - name: Get PR Number
-        id: pr
-        run: |
-          if [ ! -z "${{ github.event.pull_request.number }}" ]; then
-            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
-          else
-            echo "PR_NUMBER=${{ inputs.pr_number }}" >> $GITHUB_ENV
-          fi
+      
 
       - name: Generate QR Code
         run: |
