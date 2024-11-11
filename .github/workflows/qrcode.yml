@@ -32,6 +32,7 @@ jobs:
 
       - name: Start Expo server
         run: |
+          git status
           nohup npx expo start --no-dev --clear --tunnel 2>&1 | tee expo.log &
           sleep 20
         env:
