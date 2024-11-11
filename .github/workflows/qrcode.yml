@@ -15,13 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
-      contents: read  # Réduit à 'read' pour une meilleure sécurité
-      actions: read   # Réduit à 'read' si 'write' n'est pas indispensable
+      contents: write
+      actions: write
     steps:
       - name: Get PR Number
         id: pr
         run: |
-          if [ ! -z "${{ github.event.pull_request.number }}" ]; then
+          if [ -n "${{ github.event.pull_request.number }}" ]; then
             echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
           else
             echo "PR_NUMBER=${{ inputs.pr_number }}" >> $GITHUB_ENV
