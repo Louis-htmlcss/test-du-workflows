@@ -79,19 +79,28 @@ jobs:
           NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*' | grep -o 'http[^"]*' | head -1)
           echo "QR_URL=$NGROK_URL/qr_code_pr${{ github.event.pull_request.number }}.png" >> $GITHUB_ENV
 
-      - name: Echo Pull Request Number
+      - name: Echo Pull Request Number + URL
         run: |
           echo "Processing Pull Request #${{ env.PR_NUMBER }}"
+          echo "La vraie URL : -> ${{ $NGROK_URL/qr_code_pr${{ github.event.pull_request.number }}.png }}"
+          echo "Ce que contient la variable 'env.QR_URL' -> #${{ env.QR_URL }}"
 
       - name: PR comment with QR Code link
         uses: thollander/actions-comment-pull-request@v3
         with:
           message: |
-            Voici le QR Code pour tester votre application Expo :
-            ![QR Code](${{ env.QR_URL }})
-            Et le lien de l'application Expo :
-            ${{ env.EXPO_URL }}
-            _(execution **${{ github.run_id }}** / time_stamp **$(date -u +'%Y-%m-%d %H:%M:%S UTC')**)_
+            Ce lien/QR Code a été crée/modifié le ${{ date +"%d-%m-%y" }} à ${{ date +"%T" }}
+            ---
+            | QR Code | Lien Expo Go |
+            |--------|--------|
+            | ![QR Code](${{ env.QR_URL }}) | ${{ env.EXPO_URL }} | 
+
+            <details><summary>Details supplémentaires</summary>
+            <p>
+            - Exécution : ${{ github.run_id }}
+            - Timestamp : ${{ date +%s }}      
+            </p>
+            </details> 
           comment-tag: execution
           pr-number: ${{ env.PR_NUMBER }}
 
