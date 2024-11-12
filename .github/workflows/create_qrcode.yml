@@ -17,6 +17,7 @@ jobs:
           else
             echo "Comment does not contain the mention."
             echo "should_trigger=false" >> $GITHUB_ENV
+          fi
 
       - name: Trigger another workflow if the mention is found
         if: env.should_trigger == 'true'
