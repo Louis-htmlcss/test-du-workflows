@@ -101,7 +101,7 @@ jobs:
             local new_description
 
             if echo "$current_description" | grep -q "Application Preview"; then
-              new_description=$(echo "$current_description" | awk '/\*\*Dernière mise à jour automatique :\*\*/{p=NR} p&&/installed on your device\./{p=0} !p{print}')
+              new_description=$(echo "$current_description" | awk '/\*\*Dernière mise à jour automatique :\*\*/{p=NR} p&&/\[Expo Go\]/{p=0} !p{print}')
             else
               new_description="$current_description"
             fi
