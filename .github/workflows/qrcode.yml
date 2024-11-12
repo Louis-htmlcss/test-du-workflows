@@ -82,8 +82,8 @@ jobs:
         run: |
           # Obtenir la description actuelle de la PR
           current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
-      
-          # Nouveau contenu à ajouter à la description
+          
+          # Nouveau contenu pour la section QR
           update_message="
           | 📱 Application Preview | Details |
           |----------------------|---------|
@@ -93,12 +93,21 @@ jobs:
           | ⏱️ Link validity | ~4 hour |
       
           > Note: Make sure you have [Expo Go](https://expo.dev/client) installed on your device."
-      
-          # Mettre à jour la description de la PR
-          gh api --method PATCH repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --field body="$current_description
-      
+          
+          # Vérifier si la section QR existe déjà
+          if echo "$current_description" | grep -q "Application Preview"; then
+            # Remplacer la section existante
+            new_description=$(echo "$current_description" | sed -e '/\*\*Dernière mise à jour automatique :\*\*/,/installed on your device\./c\\n**Dernière mise à jour automatique :**\n'"$update_message"'')
+          else
+            # Ajouter la nouvelle section
+            new_description="${current_description}
+
           **Dernière mise à jour automatique :**
           $update_message"
+          fi
+      
+          # Mettre à jour la description de la PR
+          gh api --method PATCH repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --field body="$new_description"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
