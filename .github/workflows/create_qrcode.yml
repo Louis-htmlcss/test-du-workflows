@@ -33,7 +33,7 @@ jobs:
         if: env.should_trigger == 'true'
         uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ env.PR_NUMBER }}/head
+          ref: ${{ env.PR_NUMBER }}
           fetch-depth: 0
 
       - name: Trigger another workflow if the mention is found
