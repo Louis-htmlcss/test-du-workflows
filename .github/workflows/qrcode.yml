@@ -29,6 +29,20 @@ jobs:
             echo "PR_NUMBER=${{ inputs.pr_number }}" >> $GITHUB_ENV
           fi
 
+      - name: Check if PR is closed
+        id: check_pr
+        run: |
+          PR_STATE=$(gh pr view ${{ env.PR_NUMBER }} --json state -q '.state')
+          if [ "$PR_STATE" = "CLOSED" ] || [ "$PR_STATE" = "MERGED" ]; then
+            current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
+            new_description=$(echo "$current_description" | awk '/\*\*Dernière mise à jour automatique :\*\*/{p=NR} p&&/installed on your device\./{p=0} !p{print}')
+            gh api --method PATCH repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --field body="$new_description"
+            echo "PR is closed or merged, stopping workflow"
+            exit 0
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Checkout PR
         uses: actions/checkout@v4
         with:
