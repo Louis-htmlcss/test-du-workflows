@@ -96,14 +96,18 @@ jobs:
           
           # Vérifier si la section QR existe déjà
           if echo "$current_description" | grep -q "Application Preview"; then
-            # Remplacer la section existante
-            new_description=$(echo "$current_description" | sed -e '/\*\*Dernière mise à jour automatique :\*\*/,/installed on your device\./c\\n**Dernière mise à jour automatique :**\n'"$update_message"'')
+            # Remplacer la section existante en utilisant awk au lieu de sed
+            new_description=$(echo "$current_description" | awk '/\*\*Dernière mise à jour automatique :\*\*/{p=NR} p&&/installed on your device\./{p=0} !p{print}')
+            new_description="${new_description}
+
+          **Dernière mise à jour automatique :**
+          ${update_message}"
           else
             # Ajouter la nouvelle section
             new_description="${current_description}
 
           **Dernière mise à jour automatique :**
-          $update_message"
+          ${update_message}"
           fi
       
           # Mettre à jour la description de la PR
