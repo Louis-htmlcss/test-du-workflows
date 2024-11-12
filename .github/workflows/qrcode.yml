@@ -64,7 +64,7 @@ jobs:
       - name: Generate QR Code
         run: |
           sudo apt-get update && sudo apt-get install -y qrencode
-          qrencode -o "qr_code_pr${{ env.PR_NUMBER }}.png" "${{ env.EXPO_URL }}"
+          qrencode -s 10 -o "qr_code_pr${{ env.PR_NUMBER }}.png" "${{ env.EXPO_URL }}"
 
 
       - name: Create and Start HTTP Server
@@ -94,7 +94,7 @@ jobs:
             
             gh pr comment ${{ env.PR_NUMBER }} --edit-last "| 📱 Application Preview | Details |
             |----------------------|---------|
-            | 📷 QR Code | <img src=\"${{ env.QR_URL }}\" width=\"300\" /> |
+            | 📷 QR Code | <img src=\"${{ env.QR_URL }}\" /> |
             | 🔗 Expo Link | ${{ env.EXPO_URL }} |
             | ℹ️ Instructions | 1. Scan the QR code with your camera app<br>2. Open the link in Expo Go<br>3. Test the application |
             | ⏱️ Link validity | $time_message |
