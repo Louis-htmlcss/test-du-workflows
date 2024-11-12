@@ -80,43 +80,45 @@ jobs:
 
       - name: Update PR description with QR Code link
         run: |
-          # Obtenir la description actuelle de la PR
-          current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
-          
-          # Nouveau contenu pour la section QR
-          update_message="
-          | 📱 Application Preview | Details |
-          |----------------------|---------|
-          | 📷 QR Code | <img src=\"${{ env.QR_URL }}\" width=\"300\" /> |
-          | 🔗 Expo Link | ${{ env.EXPO_URL }} |
-          | ℹ️ Instructions | 1. Scan the QR code with your camera app<br>2. Open the link in Expo Go<br>3. Test the application |
-          | ⏱️ Link validity | ~4 hour |
+          # Function to create the QR section message
+          create_message() {
+            local time_info="$1"
+            echo "
+            | 📱 Application Preview | Details |
+            |----------------------|---------|
+            | 📷 QR Code | <img src=\"${{ env.QR_URL }}\" width=\"300\" /> |
+            | 🔗 Expo Link | ${{ env.EXPO_URL }} |
+            | ℹ️ Instructions | 1. Scan the QR code with your camera app<br>2. Open the link in Expo Go<br>3. Test the application |
+            | ⏱️ Link validity | $time_info |
       
-          > Note: Make sure you have [Expo Go](https://expo.dev/client) installed on your device."
-          
-          # Vérifier si la section QR existe déjà
-          if echo "$current_description" | grep -q "Application Preview"; then
-            # Remplacer la section existante en utilisant awk au lieu de sed
-            new_description=$(echo "$current_description" | awk '/\*\*Dernière mise à jour automatique :\*\*/{p=NR} p&&/installed on your device\./{p=0} !p{print}')
+            > Note: Make sure you have [Expo Go](https://expo.dev/client) installed on your device."
+          }
+
+          # Function to update PR description
+          update_pr_description() {
+            local message="$1"
+            local current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
+            local new_description
+
+            if echo "$current_description" | grep -q "Application Preview"; then
+              new_description=$(echo "$current_description" | awk '/\*\*Dernière mise à jour automatique :\*\*/{p=NR} p&&/installed on your device\./{p=0} !p{print}')
+            else
+              new_description="$current_description"
+            fi
+
             new_description="${new_description}
 
           **Dernière mise à jour automatique :**
-          ${update_message}"
-          else
-            # Ajouter la nouvelle section
-            new_description="${current_description}
+          ${message}"
 
-          **Dernière mise à jour automatique :**
-          ${update_message}"
-          fi
-      
-          # Mettre à jour la description de la PR
-          gh api --method PATCH repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --field body="$new_description"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            gh api --method PATCH repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --field body="$new_description"
+          }
 
-      - name: Update remaining time periodically
-        run: |
+          # Initial update
+          initial_message=$(create_message "~4 hour")
+          update_pr_description "$initial_message"
+
+          # Periodic updates
           for i in {1..11}; do
             sleep 1200  # Wait 20 minutes
             remaining_hours=$((4 - i/3))
@@ -128,26 +130,8 @@ jobs:
               time_message="~$remaining_hours hours $remaining_minutes remaining"
             fi
       
-            # Obtenir la description actuelle de la PR
-            current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
-      
-            # Préparer la mise à jour du contenu
-            update_message="
-            | 📱 Application Preview | Details |
-            |----------------------|---------|
-            | 📷 QR Code | <img src=\"${{ env.QR_URL }}\" /> |
-            | 🔗 Expo Link | ${{ env.EXPO_URL }} |
-            | ℹ️ Instructions | 1. Scan the QR code with your camera app<br>2. Open the link in Expo Go<br>3. Test the application |
-            | ⏲️ Génére le | ${{ env.CURRENT_DATE }} à ${{ env.CURRENT_TIME }} (<i>heure UTC<i>) |
-            | ⏱️ Link validity | $time_message |
-      
-            > Note: Make sure you have [Expo Go](https://expo.dev/client) installed on your device."
-      
-            # Mettre à jour la description de la PR avec le nouveau contenu
-            gh api --method PATCH repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --field body="$current_description
-      
-            **Dernière mise à jour automatique :**
-            $update_message"
+            update_message=$(create_message "$time_message")
+            update_pr_description "$update_message"
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
