@@ -29,6 +29,13 @@ jobs:
             echo "PR_NUMBER=${{ inputs.pr_number }}" >> $GITHUB_ENV
           fi
 
+      - name: Checkout PR if the mention is found
+        if: env.should_trigger == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ env.PR_NUMBER }}/head
+          fetch-depth: 0
+
       - name: Trigger another workflow if the mention is found
         if: env.should_trigger == 'true'
         uses: actions/github-script@v7
