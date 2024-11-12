@@ -23,17 +23,18 @@ jobs:
         if: env.should_trigger == 'true'
         id: pr
         run: |
-          if [ ! -z "${{ github.event.pull_request.number }}" ]; then
-            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          if [ "${{ github.event.issue.pull_request }}" != "null" ]; then
+            echo "PR_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
           else
-            echo "PR_NUMBER=${{ inputs.pr_number }}" >> $GITHUB_ENV
+            echo "No PR associated with this comment."
+            exit 1
           fi
 
       - name: Checkout PR if the mention is found
         if: env.should_trigger == 'true'
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.PR_NUMBER }}
+          ref: refs/pull/${{ env.PR_NUMBER }}/head
           fetch-depth: 0
 
       - name: Trigger another workflow if the mention is found
