@@ -19,6 +19,16 @@ jobs:
             echo "should_trigger=false" >> $GITHUB_ENV
           fi
 
+      - name: Get PR Number if the mention is found
+        if: env.should_trigger == 'true'
+        id: pr
+        run: |
+          if [ ! -z "${{ github.event.pull_request.number }}" ]; then
+            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          else
+            echo "PR_NUMBER=${{ inputs.pr_number }}" >> $GITHUB_ENV
+          fi
+
       - name: Trigger another workflow if the mention is found
         if: env.should_trigger == 'true'
         uses: actions/github-script@v7
@@ -28,9 +38,9 @@ jobs:
             github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'qrcode.yml', # Name of the workflow file to trigger
-              ref: 'main', # The branch to run the workflow on
+              workflow_id: 'qrcode.yml',
+              ref: 'main',
               inputs: {
-                pr_number: '${{ github.event.issue.number }}'
+                pr_number: '${{ env.PR_NUMBER }}'
               }
             })
