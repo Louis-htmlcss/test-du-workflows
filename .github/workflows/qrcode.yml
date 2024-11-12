@@ -102,8 +102,8 @@ jobs:
             local current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
             local new_description
 
-            if echo "$current_description" | grep -q "PREVIEW ENVIRONMENT"; then
-              new_description=$(echo "$current_description" | awk '/⚡️ \*\*PREVIEW ENVIRONMENT\*\* ⚡️/{p=NR} p&&/---/{p=0} !p{print}')
+            if echo "$current_description" | grep -q "⚡️ \*\*PREVIEW EXPO\*\* ⚡️"; then
+              new_description=$(echo "$current_description" | sed '/⚡️ \*\*PREVIEW EXPO\*\* ⚡️/,/---/{ /---/p; d; }')
             else
               new_description="$current_description"
             fi
