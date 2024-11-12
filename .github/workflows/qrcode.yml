@@ -83,7 +83,6 @@ jobs:
           sudo apt-get update && sudo apt-get install -y qrencode
           qrencode -s 10 -o "qr_code_pr${{ env.PR_NUMBER }}.png" "${{ env.EXPO_URL }}"
 
-
       - name: Create and Start HTTP Server
         run: |
           mkdir -p public
@@ -97,7 +96,6 @@ jobs:
 
       - name: Update PR description with QR Code link
         run: |
-          # Function to create the QR section message
           create_message() {
             local time_info="$1"
             echo "
@@ -110,7 +108,6 @@ jobs:
             "
           }
 
-          # Function to update PR description
           update_pr_description() {
             local message="$1"
             local current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
@@ -130,13 +127,11 @@ jobs:
             gh api --method PATCH repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --field body="$new_description"
           }
 
-          # Initial update
           initial_message=$(create_message "~4 hour")
           update_pr_description "$initial_message"
 
-          # Periodic updates
           for i in {1..11}; do
-            sleep 1200  # Wait 20 minutes
+            sleep 1200
             remaining_hours=$((4 - i/3))
             remaining_minutes=$((60 - (i*20)%60))
       
@@ -170,4 +165,3 @@ jobs:
       - name: Sleep 10 minutes
         run: |
           sleep 600
-    
