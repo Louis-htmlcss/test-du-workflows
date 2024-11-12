@@ -167,6 +167,6 @@ jobs:
               }
             })
 
-      - name: Sleep 10 minutes
-        run: |
-          sleep 600
+      # - name: Sleep 10 minutes
+      #   run: |
+      #     sleep 600
