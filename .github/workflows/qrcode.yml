@@ -44,16 +44,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci
-
-      - name: Installer ngrok
-        run: |
-          wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
-          unzip ngrok-stable-linux-amd64.zip
-          sudo mv ngrok /usr/local/bin/
-
-      - name: Vérifier l'installation de ngrok
-        run: |
-          which ngrok || (echo "ngrok n'est pas installé correctement" && exit 1)
+          npm install -g @expo/ngrok@^4.1.0
 
       - name: Start Expo server
         run: |
