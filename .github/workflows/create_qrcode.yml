@@ -11,7 +11,7 @@ jobs:
       - name: Check if the comment mentions @github-actions
         id: check-comment
         run: |
-          if [[ "${{ github.event.comment.body }}" == *"@github-actions"* ]]; then
+          if [[ "${{ github.event.comment.body }}" == *"$test"* ]]; then
             echo "Comment contains the mention."
             echo "should_trigger=true" >> $GITHUB_ENV
           else
