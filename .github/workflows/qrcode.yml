@@ -99,13 +99,18 @@ jobs:
           create_message() {
             local time_info="$1"
             echo "
-            | 📱 Application Preview | Details |
-            |----------------------|---------|
-            | 📷 QR Code | <img src=\"${{ env.QR_URL }}\" width=\"300\" /> |
-            | 🔗 Expo Link | ${{ env.EXPO_URL }} |
-            | ℹ️ Instructions | 1. Scan the QR code with your camera app<br>2. Open the link in Expo Go<br>3. Test the application |
-            | ⏱️ Link validity | $time_info |
-            "
+          # 🚀 PREVIEW EXPO 📱
+
+          > ### ⚡️ Scannez & Testez ! ⚡️
+          > 
+          > 📸 Scannez le QR code → 📲 Ouvrez dans Expo Go → ✨ Testez !
+
+          | 📱 Preview | Info |
+          |-----------|------|
+          | 🔲 QR Code | <img src=\"${{ env.QR_URL }}\" width=\"300\" /> |
+          | 🔗 Lien | ${{ env.EXPO_URL }} |
+          | ⏳ Expire dans | $time_info |
+          "
           }
 
           update_pr_description() {
@@ -113,21 +118,20 @@ jobs:
             local current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
             local new_description
 
-            if echo "$current_description" | grep -q "Application Preview"; then
-              new_description=$(echo "$current_description" | awk '/\*\*Dernière mise à jour automatique :\*\*/{p=NR} p&&/installed on your device\./{p=0} !p{print}')
+            if echo "$current_description" | grep -q "PREVIEW EXPO"; then
+              new_description=$(echo "$current_description" | awk '/# 🚀 PREVIEW/{p=NR} p&&/Expire dans/{p=0} !p{print}')
             else
               new_description="$current_description"
             fi
 
             new_description="${new_description}
 
-          **Dernière mise à jour automatique :**
           ${message}"
 
             gh api --method PATCH repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --field body="$new_description"
           }
 
-          initial_message=$(create_message "~4 hour")
+          initial_message=$(create_message "~4 heures")
           update_pr_description "$initial_message"
 
           for i in {1..11}; do
@@ -136,9 +140,9 @@ jobs:
             remaining_minutes=$((60 - (i*20)%60))
       
             if [ $remaining_minutes -eq 60 ]; then
-              time_message="~$remaining_hours hours remaining"
+              time_message="~$remaining_hours heures restantes"
             else
-              time_message="~$remaining_hours hours $remaining_minutes remaining"
+              time_message="~$remaining_hours heures et $remaining_minutes minutes restantes"
             fi
       
             update_message=$(create_message "$time_message")
