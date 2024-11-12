@@ -89,10 +89,10 @@ jobs:
             if [ $remaining_minutes -eq 60 ]; then
               time_message="~$remaining_hours hours remaining"
             else
-              time_message="~$remaining_hours hours $remaining_minutes minutes remaining"
+              time_message="~$remaining_hours hours $remaining_minutes remaining"
             fi
             
-            gh pr comment ${{ env.PR_NUMBER }} --edit-last "| 📱 Application Preview | Details |
+            comment_body="| 📱 Application Preview | Details |
             |----------------------|---------|
             | 📷 QR Code | <img src=\"${{ env.QR_URL }}\" /> |
             | 🔗 Expo Link | ${{ env.EXPO_URL }} |
@@ -100,6 +100,10 @@ jobs:
             | ⏱️ Link validity | $time_message |
             
             > Note: Make sure you have [Expo Go](https://expo.dev/client) installed on your device."
+
+            if ! gh pr comment ${{ env.PR_NUMBER }} --edit-last "$comment_body"; then
+              gh pr comment ${{ env.PR_NUMBER }} "$comment_body"
+            fi
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
