@@ -99,12 +99,16 @@ jobs:
           create_message() {
             local time_info="$1"
             echo "
+
+            ⚡️ **PREVIEW EXPO** ⚡️
+            ---
             | 📱 Application Preview | Details |
             |----------------------|---------|
-            | 📷 QR Code | <img src=\"${{ env.QR_URL }}\" width=\"300\" /> |
+            | 📷 QR Code | [QR Code](${{ env.QR_URL }}) |
             | 🔗 Expo Link | ${{ env.EXPO_URL }} |
             | ℹ️ Instructions | 1. Scan the QR code with your camera app<br>2. Open the link in Expo Go<br>3. Test the application |
             | ⏱️ Link validity | $time_info |
+            ---
             "
           }
 
@@ -113,15 +117,14 @@ jobs:
             local current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
             local new_description
 
-            if echo "$current_description" | grep -q "Application Preview"; then
-              new_description=$(echo "$current_description" | awk '/\*\*Dernière mise à jour automatique :\*\*/{p=NR} p&&/installed on your device\./{p=0} !p{print}')
+            if echo "$current_description" | grep -q "PREVIEW ENVIRONMENT"; then
+              new_description=$(echo "$current_description" | awk '/⚡️ \*\*PREVIEW ENVIRONMENT\*\* ⚡️/{p=NR} p&&/---/{p=0} !p{print}')
             else
               new_description="$current_description"
             fi
 
             new_description="${new_description}
 
-          **Dernière mise à jour automatique :**
           ${message}"
 
             gh api --method PATCH repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --field body="$new_description"
