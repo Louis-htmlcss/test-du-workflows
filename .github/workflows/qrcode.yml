@@ -22,7 +22,7 @@ jobs:
       - name: Check PR Status
         id: pr_check
         run: |
-          PR_STATE=$(gh api repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --jq .state)
+          PR_STATE=$(gh pr view ${{ env.PR_NUMBER }} --json state -q '.state')
           if [ "$PR_STATE" != "open" ]; then
             echo "PR is not open, cleaning up previous QR code comment if exists"
             current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
