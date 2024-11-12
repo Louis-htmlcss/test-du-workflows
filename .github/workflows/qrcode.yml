@@ -84,7 +84,7 @@ jobs:
           message: |
             | 📱 Application Preview | Details |
             |----------------------|---------|
-            | 🔄 Generated on | `$(date '+%Y-%m-%d %H:%M:%S')` |
+            | 🔄 Generated on | `${{ format('YYYY-MM-DD HH:mm:ss', github.event.pull_request.created_at) }}` |
             | 📷 QR Code | ![QR Code](${{ env.QR_URL }}) |
             | 🔗 Expo Link | ${{ env.EXPO_URL }} |
             | ℹ️ Instructions | 1. Scan the QR code with your camera app<br>2. Open the link in Expo Go<br>3. Test the application |
