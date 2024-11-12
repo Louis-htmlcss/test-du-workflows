@@ -29,6 +29,12 @@ jobs:
             echo "PR_NUMBER=${{ inputs.pr_number }}" >> $GITHUB_ENV
           fi
 
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ env.PR_NUMBER }}/head
+          fetch-depth: 0
+
       - name: Check if PR is closed
         id: check_pr
         run: |
@@ -43,11 +49,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout PR
-        uses: actions/checkout@v4
-        with:
-          ref: refs/pull/${{ env.PR_NUMBER }}/head
-          fetch-depth: 0
+      
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
