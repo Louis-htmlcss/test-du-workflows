@@ -172,7 +172,3 @@ jobs:
                 pr_number: '${{ env.PR_NUMBER }}'
               }
             })
-
-      - name: Sleep 10 minutes
-        run: |
-          sleep 600
