@@ -122,20 +122,17 @@ jobs:
             local message="$1"
             local current_description=$(gh pr view ${{ env.PR_NUMBER }} --json body -q '.body')
             local new_description
-          
-            # Utiliser awk pour supprimer correctement l'ancienne section de prévisualisation
+
             if echo "$current_description" | grep -q "PREVIEW EXPO"; then
-              new_description=$(echo "$current_description" | awk '/# 🚀 PREVIEW EXPO/{p=1} p&&/Expire dans/{p=0} !p{print}')
+              new_description=$(echo "$current_description" | awk '/# 🚀 PREVIEW/{p=NR} p&&/Expire dans/{p=0} !p{print}')
             else
               new_description="$current_description"
             fi
-          
-            # Ajouter le nouveau contenu
+
             new_description="${new_description}
-          
+
           ${message}"
-          
-            # Mettre à jour la description de la PR
+
             gh api --method PATCH repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }} --field body="$new_description"
           }
 
@@ -174,7 +171,7 @@ jobs:
             github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'qrcode.yml',
+              workflow_id: 'create_qrcode.yml',
               ref: 'main',
               inputs: {
                 pr_number: '${{ env.PR_NUMBER }}'
