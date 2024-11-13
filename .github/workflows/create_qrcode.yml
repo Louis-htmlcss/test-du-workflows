@@ -19,7 +19,10 @@ jobs:
       contents: write
       actions: write
     steps:
-      
+      - name: Echo PR Number
+        run: |
+          echo "PR_NUMBER=${{ inputs.pr_number }}" >> $GITHUB_ENV
+
       - name: Get PR Number
         id: pr
         run: |
@@ -49,7 +52,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      
+      - name: Echo PR Number
+        run: |
+          echo "PR_NUMBER=${{ env.PR_NUMBER }}" >> $GITHUB_ENV
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
