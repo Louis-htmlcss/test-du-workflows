@@ -31,7 +31,9 @@ jobs:
           mkdir dist/expo
 
       - name: Export AppEntry
-        run: npx expo export --dev --platform ios --output-dir build_ios & npx expo export --dev --platform android --output-dir build_android
+        run: |
+          npx expo export --dev --platform ios --output-dir build_ios
+          npx expo export --dev --platform android --output-dir build_android
 
       - name: Move iOS AppEntry
         run: |
@@ -57,20 +59,20 @@ jobs:
       - name: Cleanup
         run: rm -rf build_ios build_android
 
-      - name: Cloning the PR repository
+      - name: Cloning the server repository
         run: |
-          git clone "https://github.com/-- !!! REPO USER / REPO NAME !!! --.git" pr_repo
+          git clone https://github.com/Kgeek33/Expo-server-Github-Repo.git server_repo
 
-      - name: Transfering the build to PR repository
+      - name: Moving the build to the server repository
         run: |
-          mkdir pr_repo/${{ github.event.pull_request.number }}
-          cp -r dist/* pr_repo/${{ github.event.pull_request.number }}
-          cd pr_repo
-          git config --global user.email "-- !!! COMMIT MAIL !!! --"
-          git config --global user.name "-- !!! COMMIT NAME !!! --"
+          mkdir -p server_repo/builds/${{ github.event.pull_request.number }}
+          cp -r dist/* server_repo/builds/${{ github.event.pull_request.number }}
+          cd server_repo
+          git config user.email "noreply@github.com"
+          git config user.name "GitHub Actions"
           git add .
-          git commit -m "Build PR#${{ github.event.pull_request.number }}"
-          git push https://${{ secrets.GH_TOKEN }}@github.com/-- !!! REPO USER / REPO NAME !!! --.git
+          git commit -m "Add build for PR #${{ github.event.pull_request.number }}"
+          git push https://${{ secrets.GH_TOKEN }}@github.com/godetremy/Expo-server-Github-Repo.git
           cd ..
 
       - name: Commenting on PR
@@ -84,33 +86,11 @@ jobs:
               repo: context.repo.repo,
               body: `
               <h1 align="center">🎉 La preview est prête 🎉</h1>
-            
-              ![iOS](https://raw.githubusercontent.com/PapillonApp/chat-themes/refs/heads/main/.github/assets/ios_light.png#gh-light-mode-only)
-              ![iOS](https://raw.githubusercontent.com/PapillonApp/chat-themes/refs/heads/main/.github/assets/ios_dark.png#gh-dark-mode-only)
-            
-              <img
-              src="http://api.qrserver.com/v1/create-qr-code/?data=exp://-- !!! EXPO SERVER !!! --/${{ github.event.pull_request.number }}?platform=ios&size=150x150&margin=5"
-              align="left"
-              />
-              Pour exécuter cette preview sur ton iPhone, tu auras besoin de l'application ExpoGo.
-              Une fois installée, scanne ce QR code à l'aide de l'appareil photo ou entre cette url dans Expo :
-              \`exp://-- !!! EXPO SERVER !!! --/${{ github.event.pull_request.number }}?platform=ios\`
-            
-              <br><br><br>
-              <hr>
-            
-              ![Android](https://raw.githubusercontent.com/PapillonApp/chat-themes/refs/heads/main/.github/assets/android_light.png#gh-light-mode-only)
-              ![Android](https://raw.githubusercontent.com/PapillonApp/chat-themes/refs/heads/main/.github/assets/android_dark.png#gh-dark-mode-only)
-            
-              <img
-              src="http://api.qrserver.com/v1/create-qr-code/?data=exp://-- !!! EXPO SERVER !!! --/${{ github.event.pull_request.number }}?platform=android&size=150x150&margin=5"
-              align="left"
-              />
-              Pour exécuter cette preview sur ton téléphone, tu auras besoin de l'application ExpoGo.
-              Télécharge-la depuis le Google PlayStore, puis une fois installée, scanne ce QR code à l'aide du scanneur de QR code
-              de ton mobile ou entre cette url dans Expo :
-              \`exp://-- !!! EXPO SERVER !!! --/${{ github.event.pull_request.number }}?platform=android\`
-            
-              <br>
+
+              #### iOS QR Code
+              ![iOS QR Code](http://api.qrserver.com/v1/create-qr-code/?data=http://expo-server.com/builds/${{ github.event.pull_request.number }}/ios&size=150x150&margin=5)
+
+              #### Android QR Code
+              ![Android QR Code](http://api.qrserver.com/v1/create-qr-code/?data=http://expo-server.com/builds/${{ github.event.pull_request.number }}/android&size=150x150&margin=5)
               `
             });
