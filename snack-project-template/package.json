@@ -1,9 +1,0 @@
-{
-  "name": "snack-project",
-  "version": "1.0.0",
-  "main": "App.js",
-  "dependencies": {
-    "react": "18.2.0",
-    "react-native": "0.71.0"
-  }
-}
