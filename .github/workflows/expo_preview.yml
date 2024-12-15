@@ -21,6 +21,9 @@ jobs:
       - name: 💾 Install dependencies
         run: npm install
 
+      - name: 💾 Install snack-cli
+        run: npm install -g snack-cli
+
       - name: 🚀 Create Snack
         run: |
           mkdir -p snack-project
@@ -28,7 +31,7 @@ jobs:
           cp -r ./src ./snack-project/
           cp package.json snack-project/
           cd snack-project
-          npx snack-cli publish > snack-url.txt
+          snack-cli publish > snack-url.txt
         env:
           EXPO_USE_LEGACY_WORKFLOW: true
 
