@@ -3,18 +3,16 @@ name: Test Pull Request with Snack
 on:
   pull_request:
     branches:
-      - main  # Ajustez selon vos besoins
+      - main
 
 jobs:
   generate-snack:
     runs-on: ubuntu-latest
 
     steps:
-      # Étape 1 : Récupérer le code
       - name: 📥 Checkout code
         uses: actions/checkout@v3
 
-      # Étape 2 : Installer Node.js et les dépendances
       - name: ⚙️ Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -23,7 +21,6 @@ jobs:
       - name: 💾 Install dependencies
         run: npm install
 
-      # Étape 3 : Créer un projet Snack temporaire
       - name: 🚀 Create Snack
         run: |
           mkdir -p snack-project
@@ -31,7 +28,6 @@ jobs:
           cp -r ./src ./snack-project/
           cp package.json snack-project/
 
-      # Étape 4 : Exporter et envoyer vers Snack
       - name: 🌐 Upload to Snack
         run: |
           npm install -g snack-cli
@@ -39,18 +35,25 @@ jobs:
           snack publish > snack-url.txt
           cd ..
         env:
-          EXPO_USE_LEGACY_WORKFLOW: true  # Utiliser le workflow Snack classique
+          EXPO_USE_LEGACY_WORKFLOW: true
 
-      # Étape 5 : Générer un QR code pour Snack
       - name: 📷 Generate QR Code
         run: |
           snack_url=$(cat snack-project/snack-url.txt | grep "https://" | head -n 1)
           echo "Snack URL: $snack_url"
           qrencode -o snack-qr.png "$snack_url"
 
-      # Étape 6 : Télécharger le QR Code comme artefact
       - name: 🛜 Upload QR Code
         uses: actions/upload-artifact@v3
         with:
           name: snack-qr-code
           path: snack-qr.png
+
+      - name: 👁️‍🗨️ Post QR Code to Pull Request
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: "📱 Testez cette PR avec Expo Go !"
+          message: |
+            Scannez ce QR code avec Expo Go pour tester cette Pull Request :
+
+            ![QR Code](https://raw.githubusercontent.com/${{ github.repository }}/$(git rev-parse HEAD)/snack-qr.png)
