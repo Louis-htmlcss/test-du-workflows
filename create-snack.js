@@ -3,7 +3,7 @@ const fs = require("fs");
 
 // Chargez le code de votre projet
 const appTsxCode = fs.readFileSync("./App.tsx", "utf8");
-const appJsCode = `import App from './App.tsx'; export default App;`;
+const appJsCode = fs.readFileSync("./App.js", "utf8");
 
 // Créez un nouveau Snack
 const snack = new Snack({
