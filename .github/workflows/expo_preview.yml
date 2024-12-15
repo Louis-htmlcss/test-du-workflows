@@ -21,19 +21,21 @@ jobs:
       - name: 💾 Install dependencies
         run: npm install
 
+      - name: 🌐 Install Snack CLI
+        run: |
+          npm install -g snack-cli
+          echo "Adding npm binaries to PATH"
+          export PATH=$PATH:$(npm bin -g)
+          snack --version
+
       - name: 🚀 Create Snack
         run: |
           mkdir -p snack-project
           cp -r ./snack-project-template/* ./snack-project/
           cp -r ./src ./snack-project/
           cp package.json snack-project/
-
-      - name: 🌐 Upload to Snack
-        run: |
-          npm install -g snack-cli
           cd snack-project
           snack publish > snack-url.txt
-          cd ..
         env:
           EXPO_USE_LEGACY_WORKFLOW: true
 
