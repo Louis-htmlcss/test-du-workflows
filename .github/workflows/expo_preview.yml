@@ -31,7 +31,7 @@ jobs:
           cp -r ./src ./snack-project/
           cp package.json snack-project/
           cd snack-project
-          snack-cli publish > snack-url.txt
+          npx -g snack-cli publish > snack-url.txt
         env:
           EXPO_USE_LEGACY_WORKFLOW: true
 
