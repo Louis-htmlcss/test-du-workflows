@@ -1,38 +1,29 @@
-name: Test Pull Request with Snack
+name: Generate Snack QR Code
 
 on:
   pull_request:
-    branches:
-      - main
+    types: [opened, synchronize, reopened]
 
 jobs:
-  snack-test:
+  generate_qr_code:
     runs-on: ubuntu-latest
-
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: ⚙️ Set up Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: 💾 Install dependencies
-        run: npm install
+      - name: Install dependencies
+        run: npm install qrcode @actions/core @actions/github
 
-      - name: 📦 Install Snack SDK
-        run: npm install snack-sdk
+      - name: Generate Snack QR Code
+        run: node generate-qr-code.js
 
-      - name: 🚀 Generate Snack
-        run: |
-          node create-snack.js
-          
-      - name: 👁️‍🗨️ Post Snack Link to PR
-        uses: marocchino/sticky-pull-request-comment@v2
+      - name: Upload QR Code as artifact
+        uses: actions/upload-artifact@v3
         with:
-          header: "📱 Testez cette PR avec Snack !"
-          message: |
-            Vous pouvez tester cette PR directement dans **Expo Go** ou dans un navigateur. Cliquez sur le lien ci-dessous :
-
-            👉 [Testez avec Snack](https://snack.expo.dev/{{SNACK_ID}})
+          name: snack-qr-code
+          path: qr_code.png
