@@ -2,12 +2,12 @@ const { Snack } = require("snack-sdk");
 const fs = require("fs");
 
 // Chargez le code de votre projet
-const code = fs.readFileSync("./App.js", "utf8");
+const code = fs.readFileSync("./App.tsx", "utf8");
 
 // Créez un nouveau Snack
 const snack = new Snack({
   code: {
-    "App.js": code,
+    "App.tsx": code,
   },
   dependencies: {
     "expo": "latest",
