@@ -1,4 +1,4 @@
-name: Generate Snack QR Code
+name: Generate and Post Snack QR Code
 
 on:
   pull_request:
@@ -7,6 +7,7 @@ on:
 jobs:
   generate_qr_code:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -14,13 +15,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: '14'
 
       - name: Install dependencies
         run: npm install qrcode @actions/core @actions/github
 
       - name: Generate Snack QR Code
         run: node generate-qr-code.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload QR Code as artifact
         uses: actions/upload-artifact@v3
